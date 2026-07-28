@@ -27,7 +27,7 @@ To (re)link every skill into the local harness skill directories (`~/.claude/ski
 
 ### Issue tracker
 
-GitHub issues via `gh` CLI (no git remote configured yet — set one up before issue-tracker skills can create/read tickets here). See `docs/agents/issue-tracker.md`.
+GitHub issues via `gh` CLI (`elvisarteni/MattAgent`). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
