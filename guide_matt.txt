@@ -1,0 +1,110 @@
+MATT POCOCK SKILLS AGENT — INSTALL GUIDE
+==========================================
+
+WHAT GOT INSTALLED
+-------------------
+Full repo (mattpocock/skills) unzipped here:
+  C:\Users\lenovo\OneDrive - Neochain Labs\Documents\MattAgent\
+
+22 "promoted" skills (engineering + productivity buckets) linked as
+Windows junctions into your global Claude Code skills folder:
+  C:\Users\lenovo\.claude\skills\<skill-name>
+
+Junctions point back into this MattAgent folder, so `git pull` here
+(if you turn this into a git repo) keeps them current. Skills in
+misc/, personal/, in-progress/, deprecated/ were NOT linked — they're
+not part of the supported set.
+
+FIRST STEP — RUN THIS ONCE PER PROJECT
+----------------------------------------
+In any repo you want to use these skills on, run:
+
+  /setup-matt-pocock-skills
+
+It asks: which issue tracker (GitHub / Linear / local files), which
+labels you use for triage, where docs get saved. Do this before
+anything else below.
+
+THE MAIN FLOW (idea -> shipped code)
+--------------------------------------
+1. /grill-with-docs   — interview to sharpen a rough idea (needs a
+                         codebase; writes to CONTEXT.md + ADRs).
+                         No codebase? Use /grill-me instead (stateless).
+2. /to-spec            — turn the thread into a spec.
+3. /to-tickets         — split spec into tracer-bullet tickets with
+                          declared blocking edges.
+4. /implement          — build a ticket; internally drives /tdd
+                          (red-green-refactor) then runs /code-review
+                          before committing.
+
+Keep steps 1-3 in ONE unbroken context window (don't /compact until
+after /to-tickets). Each /implement starts a fresh session per ticket.
+
+Small change, no multi-session ticket split needed? Skip straight
+from step 1 to /implement in the same window.
+
+ON-RAMPS (things that feed INTO the main flow)
+-------------------------------------------------
+/triage           — for bug reports / feature requests that arrive
+                    raw (NOT for tickets /to-tickets already made).
+/diagnosing-bugs  — hard bugs: reproduce, minimise, hypothesise,
+                    instrument, fix, regression-test.
+/wayfinder        — huge foggy effort (greenfield / big feature),
+                    too big for one session. Produces a map of
+                    decision tickets on your tracker; hands off to
+                    /to-spec once the fog clears. Don't use for a
+                    normal well-scoped feature.
+
+CODEBASE HEALTH (upkeep, not features)
+------------------------------------------
+/improve-codebase-architecture — scans for "deepening opportunities",
+                                  shows an HTML report, picking one
+                                  feeds back into /grill-with-docs.
+
+STANDALONE / UTILITY COMMANDS
+---------------------------------
+/grill-me                — relentless interview, no codebase needed.
+/prototype                — throwaway code to answer one design
+                             question (state model, UI look).
+/research                 — background agent, investigates a question
+                             against primary sources, leaves a cited
+                             Markdown file.
+/handoff                  — compact current conversation into a
+                             markdown file to continue in a NEW
+                             session (use before /prototype detours
+                             or when a thread is getting full).
+/teach                     — learn a concept over multiple sessions.
+/writing-great-skills       — reference for authoring/editing skills.
+/ask-matt                  — don't remember which command to use?
+                              Run this; it's the router over
+                              everything above.
+
+VOCABULARY SKILLS (model-invoked automatically, or call directly)
+----------------------------------------------------------------------
+/domain-modeling   — sharpen fuzzy project terms, resolve overloaded
+                      words, record hard-to-reverse decisions as ADRs.
+/codebase-design    — vocabulary for designing deep modules (module,
+                      interface, depth, seam, adapter).
+
+QUICK DECISION CHEAT-SHEET
+------------------------------
+Don't know where to start          -> /ask-matt
+Have a rough idea, have a codebase -> /grill-with-docs
+Have a rough idea, no codebase yet -> /grill-me
+Something's broken, hard to find   -> /diagnosing-bugs
+Bug reports/requests piling up     -> /triage
+Idea too big for one session       -> /wayfinder
+Ready to build a scoped ticket     -> /implement
+Just want test-first on one thing  -> /tdd
+Review a branch/PR before merge    -> /code-review
+Codebase feels like a ball of mud  -> /improve-codebase-architecture
+Context window filling up          -> /handoff (new session) or
+                                       /compact (same session)
+
+NOTES
+------
+- These are Claude Code skills (SKILL.md files), invoked as slash
+  commands inside a Claude Code session — not a standalone app.
+- To update: re-download/unzip a newer skills-main.zip over this
+  folder, or clone the repo properly and `git pull`.
+- Official upstream: https://github.com/mattpocock/skills
