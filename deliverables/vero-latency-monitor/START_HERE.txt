@@ -24,4 +24,5 @@ Other files:
    uninstall.bat         remove scheduled tasks and shortcut (data is kept)
 
 Full guide: docs\VeroLatencyMonitor_Guide.html
+For Vero CLI / AI agents: VERO_CONTEXT.md (whole project in one file)
 Problems:   status.bat, then data\monitor.log, then the guide, section 13.

@@ -5,7 +5,7 @@ Owner: << OWNER >> (Quality AI Automation, GenAI Group 3)
 Jira: ASPF-1578 (AES SW Process Framework)
 Rules: see the SCMP (SCMP_QualityAIAutomation) and CONTRIBUTING.md.
 
-Full guide: [docs/VeroLatencyMonitor_Guide.html](docs/VeroLatencyMonitor_Guide.html)
+Full guide: [docs/VeroLatencyMonitor_Guide.html](docs/VeroLatencyMonitor_Guide.html) · AI context for Vero CLI: [VERO_CONTEXT.md](VERO_CONTEXT.md)
 
 ## Install (Windows, about 5 minutes)
 
