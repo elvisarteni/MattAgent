@@ -11,7 +11,7 @@ Full guide: [docs/VeroLatencyMonitor_Guide.html](docs/VeroLatencyMonitor_Guide.h
 
 Needs Python 3.8+ and nothing else: no pip install, no internet, no admin rights.
 
-1. Get the folder into e.g. `C:\Tools\vero-latency-monitor\`: `git clone`, or `py vero_latency_monitor_setup_<version>.py C:\Tools` (single-file installer, no zip needed), or unzip.
+1. Get the folder into e.g. `C:\Tools\vero-latency-monitor\`: `git clone`, or `py vero_latency_monitor_setup_<version>.py C:\Tools` (single-file installer, no zip needed), or unzip, or let an AI assistant rebuild it from `VeroLatencyMonitor_<version>_REBUILD.md`.
 2. Optional: `setup_demo.bat` shows the dashboard with a fake CLI and sample data.
 3. `setup.bat`: answer the questions (Vero command, cheapest model, timing), it tests the CLI, then Y installs background monitoring:
    - task `VeroLatencyMonitor`: probe every N minutes (also on battery, catches up after sleep)
@@ -40,4 +40,5 @@ python vlm.py init --demo              demo config (fake CLI, data-demo/)
 python -m unittest discover -s tests -t .     # tests use scripts/fake_vero.py only
 python scripts/build_zip.py                    # dist/vero-latency-monitor-<version>.zip
 python scripts/build_installer.py              # dist/vero_latency_monitor_setup_<version>.py (one text file, no zip)
+python scripts/build_rebuild_md.py             # dist/VeroLatencyMonitor_<version>_REBUILD.md (source as a document an AI rebuilds)
 ```

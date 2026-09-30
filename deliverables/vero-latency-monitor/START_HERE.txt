@@ -7,6 +7,8 @@ Needs Python 3.8+ only. No admin rights, no internet, nothing to install with pi
 0. If you received vero_latency_monitor_setup_0.2.0.py (single-file installer):
       py vero_latency_monitor_setup_0.2.0.py C:\Tools
    It creates C:\Tools\vero-latency-monitor with everything below.
+   If you received VeroLatencyMonitor_0.2.0_REBUILD.md instead: ask Vero CLI (or another AI
+   assistant) to follow the instructions at the top of that file and rebuild the project in C:\Tools.
 
 1. Put this folder somewhere local and fixed, e.g.  C:\Tools\vero-latency-monitor
    (not Downloads, not a OneDrive folder, not inside the zip preview)

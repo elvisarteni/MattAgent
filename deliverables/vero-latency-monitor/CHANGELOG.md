@@ -5,6 +5,9 @@
 ## 0.2.0
 - Distribution: single-file installer `vero_latency_monitor_setup_<version>.py` (scripts/build_installer.py)
   for channels that block .zip; plain text, SHA-256 checked, never touches config or data.
+- Distribution: `VeroLatencyMonitor_<version>_REBUILD.md` (scripts/build_rebuild_md.py), the whole source as one
+  readable Markdown document with AI rebuild instructions, SHA-256 manifest and a verify script; for channels
+  that accept no archives and no scripts. Empty files got a one-line comment so every file round-trips exactly.
 
 Review fixes (details: guide, section 16 Review log):
 - Config: accept Notepad "UTF-8 with BOM"; full validation with clear errors; env vars in data_dir.

@@ -240,6 +240,7 @@ svg.dia .dash{stroke-dasharray:5 4}
       <li><b>Single-file installer</b> <code>vero_latency_monitor_setup_0.2.0.py</code>, for channels that do not accept archives. It is one plain-text Python file you can read before running. It recreates the folder and checks each file's SHA-256:
 <pre><code>py vero_latency_monitor_setup_0.2.0.py C:\Tools
 py vero_latency_monitor_setup_0.2.0.py --list      :: only show the contents</code></pre></li>
+      <li><b>Rebuild document</b> <code>VeroLatencyMonitor_0.2.0_REBUILD.md</code>, for channels that accept no archives and no scripts. It is one readable Markdown file with every source file as a code block, a SHA-256 list and instructions for an AI assistant. Give it to Vero CLI (or any AI coding assistant) with: <i>"Follow the instructions at the top of VeroLatencyMonitor_0.2.0_REBUILD.md and rebuild the project in C:\Tools"</i>. The document includes a verify script that confirms every file is byte-identical. Put this guide in <code>docs\</code> afterwards.</li>
       <li><b>Zip</b> <code>vero-latency-monitor-0.2.0.zip</code>, where archives are allowed: unzip to <code>C:\Tools\</code>.</li>
     </ul>
     If your company blocks an attachment type, use an approved channel (Git, Teams or OneDrive link). Do not rename files to get past the filter.</li>
@@ -512,7 +513,7 @@ python vlm.py report --hours 720 --out may.html     :: any range</code></pre>
 <h2 id="history">Version history</h2>
 <div class="tw"><table>
   <tr><th>Version</th><th>Date</th><th>Change</th><th>Author</th></tr>
-  <tr><td>0.2.0</td><td>2026-09-30</td><td>Review fixes (section 16); single-file installer for channels without zip support; guided setup; one-step install with dashboard at logon and a desktop shortcut; <code>status</code> and <code>open</code> commands; separate demo data</td><td>Elvis-Nicolae Arteni</td></tr>
+  <tr><td>0.2.0</td><td>2026-09-30</td><td>Review fixes (section 16); single-file installer and a Markdown rebuild document for channels without zip or script support; guided setup; one-step install with dashboard at logon and a desktop shortcut; <code>status</code> and <code>open</code> commands; separate demo data</td><td>Elvis-Nicolae Arteni</td></tr>
   <tr><td>0.1.0</td><td>2026-09-30</td><td>First version: probe, store, manifest, live dashboard, triggers, CSV, report, guide</td><td>Elvis-Nicolae Arteni</td></tr>
 </table></div>
 </div>
