@@ -4,6 +4,10 @@ VERO LATENCY MONITOR  (ASPF-1578)
 Measures how fast the Vero CLI answers, on a timer, with a live dashboard.
 Needs Python 3.8+ only. No admin rights, no internet, nothing to install with pip.
 
+0. If you received vero_latency_monitor_setup_0.2.0.py (single-file installer):
+      py vero_latency_monitor_setup_0.2.0.py C:\Tools
+   It creates C:\Tools\vero-latency-monitor with everything below.
+
 1. Put this folder somewhere local and fixed, e.g.  C:\Tools\vero-latency-monitor
    (not Downloads, not a OneDrive folder, not inside the zip preview)
 

@@ -3,6 +3,9 @@
 ## Unreleased
 
 ## 0.2.0
+- Distribution: single-file installer `vero_latency_monitor_setup_<version>.py` (scripts/build_installer.py)
+  for channels that block .zip; plain text, SHA-256 checked, never touches config or data.
+
 Review fixes (details: guide, section 16 Review log):
 - Config: accept Notepad "UTF-8 with BOM"; full validation with clear errors; env vars in data_dir.
 - Scheduler: Task Scheduler tasks registered from XML (run on battery, catch up after sleep, no overlap,

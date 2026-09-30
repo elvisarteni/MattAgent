@@ -234,7 +234,15 @@ svg.dia .dash{stroke-dasharray:5 4}
 
 <h2 id="install"><span class="n">5</span>Install in 5 minutes</h2>
 <ol class="steps">
-  <li><b>Unzip</b> <code>vero-latency-monitor-0.2.0.zip</code> into a fixed, local folder, for example <code>C:\Tools\</code>. This gives <code>C:\Tools\vero-latency-monitor\</code>. Avoid Downloads and OneDrive-synced folders, and do not run the files from inside the zip preview. The scheduled tasks point to this folder.</li>
+  <li><b>Get the tool folder</b> into a fixed, local folder such as <code>C:\Tools\</code>, which gives <code>C:\Tools\vero-latency-monitor\</code>. Avoid Downloads and OneDrive-synced folders, because the scheduled tasks point to this folder. There are three ways, depending on what your channel allows:
+    <ul>
+      <li><b>Git (recommended, SCMP)</b>: clone the repository from Bitbucket project QAI <span class="ph">&lt;&lt; repo URL &gt;&gt;</span> into <code>C:\Tools\vero-latency-monitor</code>.</li>
+      <li><b>Single-file installer</b> <code>vero_latency_monitor_setup_0.2.0.py</code>, for channels that do not accept archives. It is one plain-text Python file you can read before running. It recreates the folder and checks each file's SHA-256:
+<pre><code>py vero_latency_monitor_setup_0.2.0.py C:\Tools
+py vero_latency_monitor_setup_0.2.0.py --list      :: only show the contents</code></pre></li>
+      <li><b>Zip</b> <code>vero-latency-monitor-0.2.0.zip</code>, where archives are allowed: unzip to <code>C:\Tools\</code>.</li>
+    </ul>
+    If your company blocks an attachment type, use an approved channel (Git, Teams or OneDrive link). Do not rename files to get past the filter.</li>
   <li><b>Optional: see the demo first.</b> Double-click <code>setup_demo.bat</code>. It uses a bundled fake Vero CLI and seven days of sample data, and opens the dashboard. Demo data lives in <code>data-demo\</code>, apart from real data. Close the window to stop it.</li>
   <li><b>Double-click <code>setup.bat</code></b>. It walks you through everything:
     <ul>
@@ -504,7 +512,7 @@ python vlm.py report --hours 720 --out may.html     :: any range</code></pre>
 <h2 id="history">Version history</h2>
 <div class="tw"><table>
   <tr><th>Version</th><th>Date</th><th>Change</th><th>Author</th></tr>
-  <tr><td>0.2.0</td><td>2026-09-30</td><td>Review fixes (section 16); guided setup; one-step install with dashboard at logon and a desktop shortcut; <code>status</code> and <code>open</code> commands; separate demo data</td><td>Elvis-Nicolae Arteni</td></tr>
+  <tr><td>0.2.0</td><td>2026-09-30</td><td>Review fixes (section 16); single-file installer for channels without zip support; guided setup; one-step install with dashboard at logon and a desktop shortcut; <code>status</code> and <code>open</code> commands; separate demo data</td><td>Elvis-Nicolae Arteni</td></tr>
   <tr><td>0.1.0</td><td>2026-09-30</td><td>First version: probe, store, manifest, live dashboard, triggers, CSV, report, guide</td><td>Elvis-Nicolae Arteni</td></tr>
 </table></div>
 </div>

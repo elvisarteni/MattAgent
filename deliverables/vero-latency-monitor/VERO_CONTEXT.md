@@ -62,7 +62,8 @@ vero-latency-monitor/
 │   ├── _py.bat                 finds Python 3.8+ (py -3, then python) and sets %PY%
 │   ├── fake_vero.py            stand-in Vero CLI for the demo and tests
 │   ├── seed_demo_data.py       writes 7 days of demo probes (only into data-demo/)
-│   └── build_zip.py            dist/vero-latency-monitor-<version>.zip
+│   ├── build_zip.py            dist/vero-latency-monitor-<version>.zip
+│   └── build_installer.py      dist/vero_latency_monitor_setup_<version>.py (single-file installer)
 ├── tests/                      unittest; unit/ and integration/; the fake CLI only, never the real one
 ├── docs/
 │   ├── VeroLatencyMonitor_Guide.html   full human guide (setup, config, troubleshooting, review log)
@@ -269,6 +270,8 @@ Global options: `--config <file>`, `-v` (DEBUG logging, including each HTTP requ
 ```bash
 python -m unittest discover -s tests -t .      # 35 tests; Python 3.8–3.13; uses scripts/fake_vero.py
 python scripts/build_zip.py                      # dist/vero-latency-monitor-<ver>.zip, root folder "vero-latency-monitor"
+python scripts/build_installer.py                # dist/vero_latency_monitor_setup_<ver>.py: one plain-text file that
+                                                 #   recreates the folder (SHA-256 checked); for channels without zip
 python vlm.py init --demo && python scripts/seed_demo_data.py && python vlm.py serve --open   # demo
 ```
 
@@ -281,7 +284,7 @@ python vlm.py init --demo && python scripts/seed_demo_data.py && python vlm.py s
 | `FAKE_VERO_FAIL=0` | Never fails |
 | unset | Random: about 3% failures and 4% slow answers |
 
-The zip excludes `data/`, `data-demo/`, `reports/`, `dist/`, `config/monitor.json`, caches and logs.
+The zip and the installer exclude `data/`, `data-demo/`, `reports/`, `dist/`, `config/monitor.json`, caches and logs.
 
 ---
 
