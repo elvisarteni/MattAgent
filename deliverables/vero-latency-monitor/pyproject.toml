@@ -1,0 +1,15 @@
+[project]
+name = "vero-latency-monitor"
+version = "0.1.0"
+description = "Monitor Vero CLI response latency (ASPF-1578)"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+vlm = "vero_latency.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vero_latency = ["web/*.html"]
