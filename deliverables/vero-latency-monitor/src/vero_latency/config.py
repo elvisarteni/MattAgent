@@ -46,17 +46,36 @@ def _merge(base: dict, over: dict) -> dict:
     return out
 
 
-def load(path: Path | None = None) -> dict:
+def read_json(path: Path) -> dict:
+    # utf-8-sig: Notepad on Windows may save "UTF-8 with BOM"
+    text = Path(path).read_text(encoding="utf-8-sig")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        hint = ""
+        if "escape" in str(e).lower():
+            hint = " (Windows paths: write C:\\\\Tools\\\\x or C:/Tools/x)"
+        raise ConfigError(f"{path}: invalid JSON: {e}{hint}") from e
+
+
+def write_json(path: Path, data: dict) -> None:
+    clean = {k: v for k, v in data.items() if not k.startswith("_")}
+    Path(path).write_text(json.dumps(clean, indent=2) + "\n", encoding="utf-8")
+
+
+def load(path: Path | str | None = None) -> dict:
     path = Path(path or os.environ.get("VLM_CONFIG") or CONFIG_FILE)
     if not path.exists():
-        raise ConfigError(f"config not found: {path} (run: vlm init)")
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        raise ConfigError(f"{path}: invalid JSON: {e}") from e
+        raise ConfigError(f"config not found: {path} (run setup.bat or: python vlm.py configure)")
+    raw = read_json(path)
+    if not isinstance(raw, dict):
+        raise ConfigError(f"{path}: top level must be a JSON object")
     cfg = _merge(DEFAULTS, raw)
-    validate(cfg)
-    data_dir = Path(cfg["data_dir"])
+    try:
+        validate(cfg)
+    except (KeyError, TypeError, ValueError) as e:
+        raise ConfigError(f"{path}: wrong value or type near {e}") from e
+    data_dir = Path(os.path.expandvars(os.path.expanduser(str(cfg["data_dir"]))))
     cfg["data_dir"] = str(data_dir if data_dir.is_absolute() else ROOT / data_dir)
     cfg["_path"] = str(path)
     return cfg
@@ -64,23 +83,40 @@ def load(path: Path | None = None) -> dict:
 
 def validate(cfg: dict) -> None:
     cli = cfg["cli"]
-    if not isinstance(cli["command"], list) or not cli["command"]:
-        raise ConfigError("cli.command must be a non-empty list of arguments")
+    if not isinstance(cli["command"], list) or not cli["command"] or not all(isinstance(a, str) for a in cli["command"]):
+        raise ConfigError("cli.command must be a non-empty list of strings")
     if cli["prompt_via"] not in ("arg", "stdin"):
         raise ConfigError("cli.prompt_via must be 'arg' or 'stdin'")
     if cli["prompt_via"] == "arg" and not any("{prompt}" in a for a in cli["command"]):
         raise ConfigError("cli.command needs a {prompt} placeholder when prompt_via is 'arg'")
-    if not cfg["models"]:
+    cli["timeout_s"] = float(cli["timeout_s"])
+    if cli["timeout_s"] <= 0:
+        raise ConfigError("cli.timeout_s must be > 0")
+    if not isinstance(cli.get("env") or {}, dict):
+        raise ConfigError("cli.env must be an object")
+    if not isinstance(cfg["models"], list) or not cfg["models"]:
         raise ConfigError("models must list at least one entry")
+    labels = set()
     for m in cfg["models"]:
-        if "id" not in m:
+        if not isinstance(m, dict) or "id" not in m:
             raise ConfigError("every model needs an 'id' (use \"\" for the CLI default)")
-        m.setdefault("label", m["id"] or "default")
-    if int(cfg["schedule"]["interval_minutes"]) < 1:
-        raise ConfigError("schedule.interval_minutes must be >= 1")
+        m["id"] = str(m["id"])
+        m["label"] = str(m.get("label") or m["id"] or "default")
+        if m["label"] in labels:
+            raise ConfigError(f"duplicate model label {m['label']!r}")
+        labels.add(m["label"])
+    s = cfg["schedule"]
+    s["interval_minutes"] = int(s["interval_minutes"])
+    if not 1 <= s["interval_minutes"] <= 1440:
+        raise ConfigError("schedule.interval_minutes must be between 1 and 1440")
     t = cfg["thresholds_ms"]
+    t["warn"], t["crit"] = float(t["warn"]), float(t["crit"])
     if not 0 < t["warn"] <= t["crit"]:
         raise ConfigError("thresholds_ms: need 0 < warn <= crit")
+    cfg["retention_days"] = int(cfg["retention_days"])
+    if cfg["retention_days"] < 1:
+        raise ConfigError("retention_days must be >= 1")
+    cfg["server"]["port"] = int(cfg["server"]["port"])
 
 
 def public_view(cfg: dict) -> dict:

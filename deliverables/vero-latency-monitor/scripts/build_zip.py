@@ -8,11 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from vero_latency import __version__  # noqa: E402
 
-SKIP_DIRS = {"data", "reports", "dist", "__pycache__", ".pytest_cache", ".venv", "venv", ".git"}
+SKIP_DIRS = {"data", "data-demo", "reports", "dist", "__pycache__", ".pytest_cache", ".venv", "venv", ".git"}
 SKIP_FILES = {"config/monitor.json"}
 
-name = f"vero-latency-monitor-{__version__}"
-out = ROOT / "dist" / f"{name}.zip"
+name = "vero-latency-monitor"  # stable folder name: scheduled tasks keep working after an update
+out = ROOT / "dist" / f"{name}-{__version__}.zip"
 out.parent.mkdir(exist_ok=True)
 n = 0
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:

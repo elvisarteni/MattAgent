@@ -174,7 +174,8 @@ function fmtPct(v){ return v == null ? "–" : (v >= 99.95 ? "100" : v.toFixed(1
 function band(v){ if (v == null || !state.data) return ""; const t = state.data.config.thresholds_ms;
   return v >= t.crit ? "crit" : v >= t.warn ? "warn" : "ok"; }
 function fmtTime(ts){ const d = new Date(ts); return d.toLocaleString(undefined,{month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
-function ago(ts){ const s = Math.round((Date.now() - new Date(ts))/1000);
+function nowMs(){ return STATIC ? new Date(STATIC.generated_at).getTime() : Date.now(); }
+function ago(ts){ const s = Math.max(0, Math.round((nowMs() - new Date(ts))/1000));
   if (s < 60) return s + " s ago"; if (s < 3600) return Math.round(s/60) + " min ago";
   if (s < 86400) return Math.round(s/3600) + " h ago"; return Math.round(s/86400) + " d ago"; }
 function colorOf(model){ const ms = state.data ? state.data.config.models : [];
@@ -248,7 +249,7 @@ function renderChart(d){
   let vmax = 0;
   models.forEach(k => d.series.models[k].forEach(b => { vmax = Math.max(vmax, b.p95 || 0, b.p50 || 0); }));
   const ymax = niceMax(vmax * 1.12);
-  const x = (t) => m.l + (t - start) / (end - start) * iw;
+  const x = (t) => m.l + (Math.min(Math.max(t, start), end) - start) / (end - start) * iw;
   const y = (v) => m.t + ih - v / ymax * ih;
   const gap = Math.max(d.series.bucket_s, d.config.interval_minutes*60) * 2.5;
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Latency over time per model">`;
@@ -332,7 +333,7 @@ function renderFoot(d){
   const c = d.config, lr = d.state.last_run;
   $("foot").innerHTML = [
     `Prompt <code>${esc(c.prompt)}</code>`,
-    `Interval ${c.interval_minutes} min (${c.run_in_dashboard ? "dashboard scheduler" : "Task Scheduler / cron"})`,
+    `Interval ${c.interval_minutes} min (${d.state.scheduler === "dashboard" ? "dashboard scheduler" : "Task Scheduler / cron"})`,
     `Timeout ${c.timeout_s} s`, `Warn ${fmtMs(c.thresholds_ms.warn)} · crit ${fmtMs(c.thresholds_ms.crit)}`,
     `Retention ${c.retention_days} d`,
     lr ? `Last run <code>${esc(lr.run_id)}</code> · Vero ${esc(lr.cli_version || "?")}` : "",
@@ -346,10 +347,10 @@ function setRunning(r){ state.running = r; $("runBtn").disabled = !!r; $("runBtn
 function tickNext(){
   if (STATIC || !state.data) return;
   const n = state.nextRun;
-  if (!state.data.config.run_in_dashboard) { $("nextText").textContent = "Trigger: Task Scheduler / cron"; return; }
   if (!n) { $("nextText").textContent = "Next run: –"; return; }
   const s = Math.max(0, Math.round(n - Date.now()/1000));
-  $("nextText").textContent = `Next run in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  const who = state.data.state.scheduler === "external" ? " (Task Scheduler)" : "";
+  $("nextText").textContent = `Next run in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}${who}`;
 }
 function connect(){
   const es = new EventSource("/api/stream"); state.es = es;
@@ -374,9 +375,10 @@ else {
   $("model").addEventListener("change", e => { state.model = e.target.value; load(); });
   $("runBtn").addEventListener("click", async () => {
     setRunning(true);
-    try { await fetch("/api/probe", {method:"POST"}); } catch(e){ setRunning(false); }
+    try { const r = await fetch("/api/probe", {method:"POST"}); if (r.status >= 400 && r.status !== 409) setRunning(false); }
+    catch(e){ setRunning(false); }
   });
-  load(); connect();
+  load().then(connect);  // first paint from data, then open the live stream
   setInterval(tickNext, 1000);
   setInterval(load, 60000);
 }

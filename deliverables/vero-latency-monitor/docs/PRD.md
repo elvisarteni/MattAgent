@@ -16,7 +16,8 @@ Quality Lead (owner of the figures), Quality AI Automation team (operates it), S
 | VLM-002 | Support time-trigger setup (Windows Task Scheduler / cron, built-in scheduler) | ASPF-1578 AC2 |
 | VLM-003 | Record every probe (SQLite, run manifest) and show it on a dashboard | ASPF-1578 AC3 |
 | VLM-004 | Run without manual steps once set up (scheduled, retention pruning, logs) | ASPF-1578 AC4 |
-| VLM-005 | Install on another laptop from a zip, no internet, no admin rights | ASPF-1578 |
+| VLM-005 | Install on another laptop from a zip with one guided script, no internet, no admin rights | ASPF-1578 |
+| VLM-008 | Keep measuring on a laptop: on battery, after sleep, dashboard available after logon | ASPF-1578 |
 | VLM-006 | Live view of new probes without page reload | ASPF-1578 |
 | VLM-007 | Export (CSV) and a self-contained HTML report for email | ASPF-1578 |
 

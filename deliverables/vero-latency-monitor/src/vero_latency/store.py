@@ -1,6 +1,7 @@
 """SQLite storage for probe results. One file: <data_dir>/latency.db."""
 from __future__ import annotations
 
+import contextlib
 import csv
 import io
 import sqlite3
@@ -48,10 +49,16 @@ class Store:
             c.execute("PRAGMA journal_mode=WAL")
             c.executescript(SCHEMA)
 
-    def _conn(self) -> sqlite3.Connection:
+    @contextlib.contextmanager
+    def _conn(self):
+        """Commit on success, roll back on error, always close (no leaked file handles on Windows)."""
         c = sqlite3.connect(self.path, timeout=30)
         c.row_factory = sqlite3.Row
-        return c
+        try:
+            with c:
+                yield c
+        finally:
+            c.close()
 
     # writes -------------------------------------------------------------
     def run_exists(self, run_id: str) -> bool:
@@ -83,8 +90,8 @@ class Store:
         cutoff = time.time() - retention_days * 86400
         with self._conn() as c:
             n = c.execute("DELETE FROM probes WHERE epoch < ?", (cutoff,)).rowcount
-            c.execute("DELETE FROM runs WHERE run_id NOT IN (SELECT DISTINCT run_id FROM probes)"
-                      " AND finished_at IS NOT NULL")
+            c.execute("DELETE FROM runs WHERE finished_at IS NOT NULL"
+                      " AND run_id NOT IN (SELECT DISTINCT run_id FROM probes)")
             return n
 
     # reads --------------------------------------------------------------

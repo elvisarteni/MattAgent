@@ -1,0 +1,27 @@
+VERO LATENCY MONITOR  (ASPF-1578)
+=================================
+
+Measures how fast the Vero CLI answers, on a timer, with a live dashboard.
+Needs Python 3.8+ only. No admin rights, no internet, nothing to install with pip.
+
+1. Put this folder somewhere local and fixed, e.g.  C:\Tools\vero-latency-monitor
+   (not Downloads, not a OneDrive folder, not inside the zip preview)
+
+2. (optional) Double-click  setup_demo.bat   -> dashboard with a fake CLI and sample data
+
+3. Double-click  setup.bat
+     - answer the questions (Vero command, cheapest model, timing; Enter = default)
+     - it tests the Vero CLI once per model
+     - answer Y to install background monitoring
+   The dashboard opens. Later use the desktop shortcut "Vero Latency Dashboard"
+   or http://127.0.0.1:8765/
+
+Other files:
+   start_dashboard.bat   open the dashboard (starts it if needed)
+   run_probe_now.bat     one measurement now
+   status.bat            what is configured and running
+   make_report.bat       HTML report of the last 7 days, for email
+   uninstall.bat         remove scheduled tasks and shortcut (data is kept)
+
+Full guide: docs\VeroLatencyMonitor_Guide.html
+Problems:   status.bat, then data\monitor.log, then the guide, section 13.

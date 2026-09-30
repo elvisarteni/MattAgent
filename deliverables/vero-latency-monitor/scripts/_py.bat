@@ -9,7 +9,9 @@ exit /b 0
 :nopy
 echo.
 echo  Python 3.8 or newer was not found.
-echo  Install it (Software Center or python.org, tick "Add python.exe to PATH") and run this again.
+echo  Install it from Software Center, or python.org (tick "Add python.exe to PATH"),
+echo  or run:  winget install Python.Python.3.12
+echo  Then run this file again.
 echo.
 pause
 exit /b 1

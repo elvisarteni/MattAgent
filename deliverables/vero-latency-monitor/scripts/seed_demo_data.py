@@ -22,6 +22,8 @@ a.add_argument("--interval", type=int, default=15)
 args = a.parse_args()
 
 cfg = config.load()
+if not Path(cfg["data_dir"]).name.startswith("data-demo"):
+    sys.exit(f"refusing to seed demo data into {cfg['data_dir']}: run  vlm init --demo  first")
 store = Store(cfg["data_dir"])
 now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
 t = now - dt.timedelta(days=args.days)

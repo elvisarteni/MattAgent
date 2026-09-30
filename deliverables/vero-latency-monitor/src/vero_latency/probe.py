@@ -12,6 +12,7 @@ import logging
 import os
 import platform
 import shutil
+import signal
 import subprocess
 import threading
 import time
@@ -53,12 +54,17 @@ def build_command(template: list[str], prompt: str, model_id: str, prompt_via: s
 
 
 def _kill_tree(proc: subprocess.Popen) -> None:
+    """Kill the CLI and everything it started (e.g. vero.cmd -> node), so no pipe stays open."""
     try:
         if IS_WINDOWS:
             subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)],
                            capture_output=True, creationflags=NO_WINDOW)
         else:
-            proc.kill()
+            os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        pass
+    try:
+        proc.kill()
     except OSError:
         pass
 
@@ -74,6 +80,7 @@ def time_command(args: list[str], stdin_text: str | None, timeout_s: float,
             stdin=subprocess.PIPE if stdin_text is not None else subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             env=env, creationflags=NO_WINDOW,
+            start_new_session=not IS_WINDOWS,  # own process group, killable as a whole
         )
     except OSError as e:
         return {"total_ms": None, "first_byte_ms": None, "exit_code": None,
@@ -155,6 +162,19 @@ def new_run_id(store: Store, now: dt.datetime) -> str:
     return run_id
 
 
+def lock_stale_after(cfg: dict) -> float:
+    return cfg["cli"]["timeout_s"] * len(cfg["models"]) + 120
+
+
+def run_in_progress(cfg: dict) -> bool:
+    """True while any process (dashboard or Task Scheduler) holds a fresh probe lock."""
+    try:
+        age = time.time() - (Path(cfg["data_dir"]) / "probe.lock").stat().st_mtime
+    except FileNotFoundError:
+        return False
+    return age < lock_stale_after(cfg)
+
+
 class RunLock:
     """File lock so a Task Scheduler run and a dashboard run never overlap."""
 
@@ -192,8 +212,7 @@ class RunLock:
 def run_cycle(cfg: dict, store: Store, trigger: str = "manual") -> dict | None:
     """Probe every model once. Returns the run manifest, or None if another run holds the lock."""
     cli = cfg["cli"]
-    stale = cli["timeout_s"] * len(cfg["models"]) + 120
-    with RunLock(cfg["data_dir"], stale) as lock:
+    with RunLock(cfg["data_dir"], lock_stale_after(cfg)) as lock:
         if not lock.held:
             log.info("another run is in progress; skipped")
             return None

@@ -1,24 +1,36 @@
 @echo off
-rem First-time setup. Usage: setup.bat          (real Vero CLI)
-rem                          setup.bat demo     (fake CLI + 7 days of sample data)
+rem Guided first-time setup: configure -> test -> install background monitoring.
 setlocal
 cd /d "%~dp0"
+title Vero Latency Monitor - setup
 call scripts\_py.bat || exit /b 1
-echo Using: %PY%
-if /I "%~1"=="demo" (
-  %PY% vlm.py init --demo --force
-  %PY% scripts\seed_demo_data.py
-  %PY% vlm.py doctor
-  echo.
-  echo Demo ready. Start the dashboard with start_dashboard.bat
-  pause
-  exit /b 0
-)
-if not exist config\monitor.json %PY% vlm.py init
 echo.
-echo Edit config\monitor.json: Vero command, cheapest model id. Notepad opens now; save and close it.
-notepad config\monitor.json
+echo  Vero Latency Monitor setup  (Python: %PY%)
+echo  ------------------------------------------------------------
+:configure
+%PY% vlm.py configure
+if errorlevel 1 goto again
+echo.
+echo  Testing the Vero CLI (one call per model, nothing stored)...
 %PY% vlm.py doctor
+if errorlevel 1 goto again
 echo.
-echo If RESULT says ready: run start_dashboard.bat and/or install_schedule.bat
+choice /C YN /M " Install background monitoring (probe on a timer + dashboard at every logon)"
+if errorlevel 2 goto manual
+%PY% vlm.py install
+echo.
+echo  Done. The dashboard opens now and from the desktop shortcut "Vero Latency Dashboard".
+%PY% vlm.py open
+goto end
+:manual
+echo.
+echo  Not installed. Use start_dashboard.bat (it also probes while its window is open).
+goto end
+:again
+echo.
+choice /C YN /M " Not ready. Run the configuration again"
+if errorlevel 2 goto end
+goto configure
+:end
+echo.
 pause

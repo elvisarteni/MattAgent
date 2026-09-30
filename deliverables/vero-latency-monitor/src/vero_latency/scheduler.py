@@ -1,14 +1,25 @@
-"""Time triggers: an in-process loop (dashboard mode) and the OS scheduler
-(Windows Task Scheduler or cron) for fully unattended runs."""
+"""Time triggers.
+
+- Loop: in-process scheduler used while the dashboard runs in "dashboard" mode.
+- install()/remove()/status(): the OS scheduler for unattended use.
+  Windows: two Task Scheduler tasks, registered from XML so laptop-safe settings apply
+  (runs on battery, catches up after sleep, never two at once):
+    VeroLatencyMonitor   every N minutes: pythonw vlm.py probe --trigger task
+    VeroLatencyDashboard at logon:        pythonw vlm.py serve --no-scheduler (hidden, background)
+  Linux/macOS: two crontab lines (probe every N minutes, dashboard @reboot).
+"""
 from __future__ import annotations
 
+import datetime as dt
 import logging
 import os
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from .config import ROOT
 from .probe import NO_WINDOW, run_cycle
@@ -16,26 +27,36 @@ from .store import Store
 
 log = logging.getLogger("vero_latency")
 
-TASK_NAME = "VeroLatencyMonitor"
+PROBE_TASK = "VeroLatencyMonitor"
+DASH_TASK = "VeroLatencyDashboard"
 CRON_MARK = "# vero-latency-monitor"
+SHORTCUT = "Vero Latency Dashboard.url"
+
+
+def next_aligned(interval_s: int, now: float | None = None) -> float:
+    """Next wall-clock boundary (:00, :15, ...). Task Scheduler and the Loop use the same grid."""
+    now = time.time() if now is None else now
+    return (now // interval_s + 1) * interval_s
 
 
 class Loop:
-    """Runs a probe cycle every interval, aligned to wall-clock boundaries."""
+    """Runs a probe cycle every interval while the dashboard is open."""
 
     def __init__(self, cfg: dict, store: Store):
         self.cfg, self.store = cfg, store
         self.interval = int(cfg["schedule"]["interval_minutes"]) * 60
+        self.active = False
         self.next_run: float | None = None
         self.running = False
         self._stop = threading.Event()
         self._busy = threading.Lock()
 
-    def _align(self, now: float) -> float:
-        return (now // self.interval + 1) * self.interval
+    def expected_next(self) -> float:
+        """Next run time; in external mode the OS scheduler uses the same aligned grid."""
+        return self.next_run if self.active and self.next_run else next_aligned(self.interval)
 
     def trigger(self, source: str) -> bool:
-        """Start a cycle in the background. False if one is already running."""
+        """Start a cycle in the background. False if one is already running here."""
         if not self._busy.acquire(blocking=False):
             return False
 
@@ -53,11 +74,13 @@ class Loop:
         return True
 
     def start(self) -> None:
+        self.active = True
+
         def loop():
-            self.next_run = self._align(time.time())
+            self.next_run = next_aligned(self.interval)
             while not self._stop.wait(max(0.0, self.next_run - time.time())):
                 self.trigger("schedule")
-                self.next_run = self._align(time.time())
+                self.next_run = next_aligned(self.interval)
 
         threading.Thread(target=loop, daemon=True).start()
 
@@ -65,61 +88,174 @@ class Loop:
         self._stop.set()
 
 
-# OS scheduler -----------------------------------------------------------------
+# commands the OS scheduler runs ------------------------------------------------
 
-def _python_for_task() -> str:
+def _python(background: bool) -> str:
     exe = Path(sys.executable)
-    if os.name == "nt":
-        w = exe.with_name("pythonw.exe")  # no console window every run
+    if os.name == "nt" and background:
+        w = exe.with_name("pythonw.exe")  # no console window
         if w.exists():
             return str(w)
     return str(exe)
 
 
-def task_command() -> list[str]:
-    return [_python_for_task(), str(ROOT / "vlm.py"), "probe", "--trigger", "task"]
+def probe_command() -> list[str]:
+    return [_python(True), str(ROOT / "vlm.py"), "probe", "--trigger", "task", "--quiet"]
 
 
-def install(interval_minutes: int) -> str:
-    cmd = task_command()
+def dashboard_command() -> list[str]:
+    return [_python(True), str(ROOT / "vlm.py"), "serve", "--no-scheduler"]
+
+
+# Windows ------------------------------------------------------------------------
+
+def _win_user() -> str:
+    user = os.environ.get("USERNAME", "")
+    dom = os.environ.get("USERDOMAIN", "")
+    return f"{dom}\\{user}" if dom and user else user
+
+
+def _args(cmd: list[str]) -> str:
+    return " ".join(f'"{a}"' if (" " in a or a.endswith(".py")) else a for a in cmd)
+
+
+def _task_xml(description: str, trigger_xml: str, cmd: list[str], time_limit: str) -> str:
+    user = escape(_win_user())
+    return f"""<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>{escape(description)}</Description></RegistrationInfo>
+  <Triggers>{trigger_xml}</Triggers>
+  <Principals><Principal id="Author"><UserId>{user}</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings><StopOnIdleEnd>false</StopOnIdleEnd><RestartOnIdle>false</RestartOnIdle></IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <ExecutionTimeLimit>{time_limit}</ExecutionTimeLimit>
+    <RestartOnFailure><Interval>PT1M</Interval><Count>3</Count></RestartOnFailure>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>{escape(cmd[0])}</Command>
+      <Arguments>{escape(_args(cmd[1:]))}</Arguments>
+      <WorkingDirectory>{escape(str(ROOT))}</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>
+"""
+
+
+def probe_task_xml(interval_minutes: int) -> str:
+    start = dt.datetime.fromtimestamp(next_aligned(interval_minutes * 60)).strftime("%Y-%m-%dT%H:%M:%S")
+    trig = (f"<TimeTrigger><Repetition><Interval>PT{interval_minutes}M</Interval>"
+            f"<StopAtDurationEnd>false</StopAtDurationEnd></Repetition>"
+            f"<StartBoundary>{start}</StartBoundary><Enabled>true</Enabled></TimeTrigger>")
+    return _task_xml("Vero CLI latency probe (ASPF-1578)", trig, probe_command(), "PT1H")
+
+
+def dashboard_task_xml() -> str:
+    trig = f"<LogonTrigger><Enabled>true</Enabled><UserId>{escape(_win_user())}</UserId></LogonTrigger>"
+    return _task_xml("Vero CLI latency dashboard, http://127.0.0.1 (ASPF-1578)", trig, dashboard_command(), "PT0S")
+
+
+def _schtasks(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    r = subprocess.run(["schtasks", *args], capture_output=True, text=True, creationflags=NO_WINDOW)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"schtasks {args[0]} failed: {(r.stderr or r.stdout).strip()}")
+    return r
+
+
+def _register(name: str, xml: str) -> None:
+    fd, path = tempfile.mkstemp(suffix=".xml")
+    os.close(fd)
+    try:
+        Path(path).write_text(xml, encoding="utf-16")
+        _schtasks("/Create", "/F", "/TN", name, "/XML", path)
+    finally:
+        os.unlink(path)
+
+
+def _desktop() -> Path:
     if os.name == "nt":
-        tr = f'"{cmd[0]}" "{cmd[1]}" ' + " ".join(cmd[2:])
-        if interval_minutes % 60 == 0:
-            sc = ["/SC", "HOURLY", "/MO", str(interval_minutes // 60)]
-        else:
-            sc = ["/SC", "MINUTE", "/MO", str(interval_minutes)]
-        args = ["schtasks", "/Create", "/F", "/TN", TASK_NAME, "/TR", tr] + sc
-        r = subprocess.run(args, capture_output=True, text=True, creationflags=NO_WINDOW)
-        if r.returncode != 0:
-            raise RuntimeError((r.stderr or r.stdout).strip())
-        return f"Windows task '{TASK_NAME}' created: every {interval_minutes} min\n  {tr}"
-    line = f"{_cron_expr(interval_minutes)} {' '.join(_sh(c) for c in cmd)} {CRON_MARK}"
-    lines = [l for l in _crontab_lines() if CRON_MARK not in l] + [line]
-    _write_crontab(lines)
-    return f"cron entry installed:\n  {line}"
+        try:
+            import winreg
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                 r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
+            return Path(os.path.expandvars(winreg.QueryValueEx(key, "Desktop")[0]))
+        except OSError:
+            pass
+    return Path.home() / "Desktop"
 
 
-def remove() -> str:
+def _shortcut(url: str) -> Path | None:
+    d = _desktop()
+    if not d.is_dir():
+        return None
+    p = d / SHORTCUT
+    p.write_text(f"[InternetShortcut]\nURL={url}\n", encoding="utf-8")
+    return p
+
+
+# public -----------------------------------------------------------------------
+
+def install(interval_minutes: int, url: str, dashboard: bool = True) -> list[str]:
+    out = []
     if os.name == "nt":
-        r = subprocess.run(["schtasks", "/Delete", "/F", "/TN", TASK_NAME],
-                           capture_output=True, text=True, creationflags=NO_WINDOW)
-        if r.returncode != 0:
-            raise RuntimeError((r.stderr or r.stdout).strip())
-        return f"Windows task '{TASK_NAME}' removed"
-    _write_crontab([l for l in _crontab_lines() if CRON_MARK not in l])
-    return "cron entry removed"
+        _register(PROBE_TASK, probe_task_xml(interval_minutes))
+        out.append(f"task '{PROBE_TASK}': probe every {interval_minutes} min (also on battery, catches up after sleep)")
+        if dashboard:
+            _register(DASH_TASK, dashboard_task_xml())
+            _schtasks("/Run", "/TN", DASH_TASK, check=False)
+            out.append(f"task '{DASH_TASK}': dashboard starts hidden at every logon (started now)")
+    else:
+        lines = [l for l in _crontab_lines() if CRON_MARK not in l]
+        lines.append(f"{_cron_expr(interval_minutes)} {' '.join(_sh(c) for c in probe_command())} {CRON_MARK}")
+        if dashboard:
+            lines.append(f"@reboot {' '.join(_sh(c) for c in dashboard_command())} >/dev/null 2>&1 {CRON_MARK}")
+            subprocess.Popen(dashboard_command(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)
+        _write_crontab(lines)
+        out.append(f"cron: probe every {interval_minutes} min" + (", dashboard @reboot (started now)" if dashboard else ""))
+    if dashboard:
+        sc = _shortcut(url)
+        out.append(f"desktop shortcut: {sc}" if sc else "no desktop folder found; open " + url)
+    return out
+
+
+def remove() -> list[str]:
+    out = []
+    if os.name == "nt":
+        _schtasks("/End", "/TN", DASH_TASK, check=False)
+        for name in (PROBE_TASK, DASH_TASK):
+            r = _schtasks("/Delete", "/F", "/TN", name, check=False)
+            out.append(f"task '{name}': " + ("removed" if r.returncode == 0 else "not installed"))
+    else:
+        _write_crontab([l for l in _crontab_lines() if CRON_MARK not in l])
+        out.append("cron entries removed (a running dashboard stops at the next reboot or with Ctrl+C)")
+    sc = _desktop() / SHORTCUT
+    if sc.exists():
+        sc.unlink()
+        out.append("desktop shortcut removed")
+    return out
 
 
 def status() -> str:
     if os.name == "nt":
-        r = subprocess.run(["schtasks", "/Query", "/TN", TASK_NAME, "/V", "/FO", "LIST"],
-                           capture_output=True, text=True, creationflags=NO_WINDOW)
-        if r.returncode != 0:
-            return f"Windows task '{TASK_NAME}' not installed"
-        keep = ("TaskName", "Next Run Time", "Status", "Last Run Time", "Last Result", "Task To Run", "Repeat: Every")
-        return "\n".join(l for l in r.stdout.splitlines() if l.strip().startswith(keep))
-    mine = [l for l in _crontab_lines() if CRON_MARK in l]
-    return mine[0] if mine else "cron entry not installed"
+        parts = []
+        for name in (PROBE_TASK, DASH_TASK):
+            r = _schtasks("/Query", "/TN", name, "/FO", "LIST", check=False)
+            parts.append(r.stdout.strip() if r.returncode == 0 else f"{name}: not installed")
+        return "\n\n".join(parts)
+    try:
+        mine = [l for l in _crontab_lines() if CRON_MARK in l]
+    except RuntimeError as e:
+        return f"OS scheduler: {e}"
+    return "\n".join(mine) if mine else "cron entries not installed"
 
 
 def _cron_expr(minutes: int) -> str:
@@ -135,7 +271,10 @@ def _sh(s: str) -> str:
 
 
 def _crontab_lines() -> list[str]:
-    r = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
+    try:
+        r = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
+    except FileNotFoundError:
+        raise RuntimeError("crontab is not installed on this machine")
     return r.stdout.splitlines() if r.returncode == 0 else []
 
 

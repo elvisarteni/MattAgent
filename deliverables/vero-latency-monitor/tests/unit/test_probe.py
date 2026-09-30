@@ -44,3 +44,24 @@ class ClassifyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LockTest(unittest.TestCase):
+    def test_stale_lock_is_ignored_and_cleared(self):
+        import os
+        import tempfile
+        import time
+        from pathlib import Path
+
+        from vero_latency.probe import RunLock, run_in_progress
+        with tempfile.TemporaryDirectory() as d:
+            cfg = {"data_dir": d, "cli": {"timeout_s": 1}, "models": [{}]}
+            lock = Path(d) / "probe.lock"
+            lock.write_text("123")
+            self.assertTrue(run_in_progress(cfg))
+            old = time.time() - 3600
+            os.utime(lock, (old, old))
+            self.assertFalse(run_in_progress(cfg))
+            with RunLock(d, 121) as held:
+                self.assertTrue(held.held)
+            self.assertFalse(lock.exists())

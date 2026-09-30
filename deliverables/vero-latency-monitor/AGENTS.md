@@ -8,7 +8,7 @@ Measures Vero CLI response latency. It is not an AI agent itself: it calls the V
 - Never store the model answer. Store only status, timings, exit code, answer length and a truncated error.
 - No secrets in `config/monitor.json` or in Git. Credentials stay in the Vero CLI's own login or in environment variables.
 - Every probe belongs to a run with a run_id `<YYYYMMDD-HHMM>-vero-latency` and a JSON run manifest.
-- Run outputs (`data/`, `reports/`) are never committed.
+- Run outputs (`data/`, `data-demo/`, `reports/`, `dist/`) are never committed.
 
 ## Tools allowed
 Python 3.8+ standard library only (ADR-001). The Vero CLI as configured.

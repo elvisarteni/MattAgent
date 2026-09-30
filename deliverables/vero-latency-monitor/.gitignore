@@ -22,4 +22,4 @@ config/monitor.json
 *.xls
 *.pdf
 *.pptx
-dist/
+data-demo/

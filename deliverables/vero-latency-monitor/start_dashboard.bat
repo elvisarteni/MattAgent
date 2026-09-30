@@ -1,5 +1,5 @@
 @echo off
-rem Starts the live dashboard on http://127.0.0.1:8765 . Keep this window open.
+rem Opens the dashboard; starts it first if it is not running. Keep this window open in that case.
 setlocal
 cd /d "%~dp0"
 call scripts\_py.bat || exit /b 1
