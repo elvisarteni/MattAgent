@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vero Status</title>
+<link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%238a94a3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b2230; --mut:#5d6878; --line:#dde2ea; --paper:#f4f6f9; --card:#ffffff; --brand:#0a6aa1;
+  --ok:#1f7a45; --ok-bg:#e8f4ed; --bad:#9b1c2e; --bad-bg:#f8e7ea; --warn:#a8500b; --idle:#8a94a3; --idle-bg:#eef1f5;
+  --sans:"Segoe UI","IBM Plex Sans",Roboto,Helvetica,Arial,sans-serif; --mono:Consolas,"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --ink:#e6eaf0; --mut:#9aa5b4; --line:#2c3441; --paper:#10141a; --card:#171c24; --brand:#4fa8dc;
+  --ok:#4cc38a; --ok-bg:#132a1f; --bad:#f06b7f; --bad-bg:#321a20; --warn:#e39a4b; --idle:#6f7a89; --idle-bg:#1c222b;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+.wrap{max-width:880px;margin:0 auto;padding:22px 20px 40px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+header h1{font-size:20px;margin:0;font-weight:700}
+header .ver{color:var(--mut);font-size:13px}
+header .sp{flex:1}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+button:disabled{opacity:.55;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.hero{display:flex;gap:20px;align-items:center;padding:26px 24px;background:var(--idle-bg)}
+.hero.ok{background:var(--ok-bg);border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+.hero.bad{background:var(--bad-bg);border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
+.lamp{width:72px;height:72px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:36px;font-weight:800;background:var(--idle)}
+.ok .lamp{background:var(--ok)} .bad .lamp{background:var(--bad)}
+.checking .lamp{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.checking .lamp{animation:none}}
+.hero h2{margin:0;font-size:28px;line-height:1.2}
+.hero .meta{color:var(--mut);margin-top:4px}
+.hero .why{margin-top:8px;font-size:14px}
+.ok .why{color:var(--warn)} .bad .why{color:var(--bad)}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:6px}
+.model{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.model .name{font-size:22px;font-weight:700;line-height:1.25}
+.model .id{font-family:var(--mono);font-size:12px;color:var(--mut);overflow-wrap:anywhere;margin-top:2px}
+.model .sub{font-size:13px;color:var(--mut);margin-top:4px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.facts .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.dots span{width:14px;height:14px;border-radius:4px;background:var(--idle)}
+.dots span.ok{background:var(--ok)} .dots span.bad{background:var(--bad)}
+.muted{color:var(--mut);font-size:13px}
+.settings{display:none}
+.settings.open{display:block}
+.form{display:grid;grid-template-columns:220px 1fr;gap:12px 16px;align-items:center}
+.form input,.form select{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%}
+.form .hint{grid-column:2;font-size:12.5px;color:var(--mut);margin-top:-6px}
+.row{display:flex;gap:10px;align-items:center;margin-top:14px}
+.msg{font-size:13px}
+.msg.err{color:var(--bad)} .msg.ok{color:var(--ok)}
+.overlay{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;text-align:center;padding:20px}
+.overlay.show{display:flex}
+.overlay h2{margin:0 0 8px}
+@media (max-width:640px){.model,.facts{grid-template-columns:1fr}.form{grid-template-columns:1fr}.form .hint{grid-column:1}
+  .hero{flex-direction:column;align-items:flex-start}.hero h2{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Vero Status</h1><span class="ver" id="ver"></span>
+    <span class="sp"></span>
+    <button class="primary" id="checkBtn" type="button">Check now</button>
+    <button id="setBtn" type="button" aria-expanded="false" aria-controls="settings">Settings</button>
+    <button id="quitBtn" type="button">Quit</button>
+  </header>
+
+  <section class="card hero" id="hero" aria-live="polite">
+    <div class="lamp" id="lamp">?</div>
+    <div>
+      <h2 id="title">Starting…</h2>
+      <div class="meta" id="meta"></div>
+      <div class="why" id="why"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="model">
+      <div>
+        <div class="label">Vero's model</div>
+        <div class="name" id="cfgName">–</div>
+        <div class="id" id="cfgId"></div>
+        <div class="sub" id="cfgSub"></div>
+      </div>
+      <div>
+        <div class="label" id="ansLabel">Answered the last check</div>
+        <div class="name" id="ansName">–</div>
+        <div class="id" id="ansId"></div>
+        <div class="sub" id="ansSub"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="facts">
+      <div><div class="label">Available, last 24 h</div><div class="v" id="avail">–</div><div class="muted" id="availSub"></div></div>
+      <div><div class="label">Last answer took</div><div class="v" id="took">–</div><div class="muted">for "Reply with exactly: OK"</div></div>
+      <div><div class="label">Next check</div><div class="v" id="next">–</div><div class="muted" id="every"></div></div>
+    </div>
+    <div class="label" style="margin-top:16px">Last checks (oldest → newest)</div>
+    <div class="dots" id="dots"></div>
+  </section>
+
+  <section class="card settings" id="settings" aria-label="Settings">
+    <div class="label">Settings</div>
+    <div class="form">
+      <label for="sInterval">Check automatically</label>
+      <select id="sInterval">
+        <option value="0">Only when I click "Check now"</option>
+        <option value="5">Every 5 minutes</option>
+        <option value="15">Every 15 minutes</option>
+        <option value="30">Every 30 minutes</option>
+        <option value="60">Every hour</option>
+      </select>
+      <div class="hint">Each check asks Vero one tiny question (about 1 minute, 2 small model calls).</div>
+      <label for="sModel">Model used for the check</label>
+      <input id="sModel" spellcheck="false" placeholder="empty = Vero's own model">
+      <div class="hint">A cheap model keeps checks cheap. Leave empty to test the model Vero is set to.</div>
+      <label for="sTimeout">Give up after (seconds)</label>
+      <input id="sTimeout" type="number" min="30" max="600" step="10">
+      <label for="sPath">Vero CLI location</label>
+      <input id="sPath" spellcheck="false" placeholder="empty = find it automatically">
+      <div class="hint" id="found"></div>
+    </div>
+    <div class="row"><button class="primary" id="saveBtn" type="button">Save</button><span class="msg" id="saveMsg"></span></div>
+  </section>
+
+  <p class="muted" id="foot"></p>
+</div>
+
+<div class="overlay" id="stopped"><div><h2>Vero Status is stopped</h2>
+  <p class="muted">Double-click <b>Vero Status</b> to start it again. You can close this tab.</p></div></div>
+
+<script>
+(function(){
+"use strict";
+const $ = (id) => document.getElementById(id);
+let S = null, timer = null, settingsLoaded = false, offline = false;
+
+function prettyModel(id){
+  if (!id) return null;
+  const m = /claude-(opus|sonnet|haiku|fable)-(\d+)(?:-(\d{1,2}))?(?!\d)/i.exec(id);
+  if (m) return "Claude " + m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + " " + m[2] + (m[3] ? "." + m[3] : "");
+  return id.split(/[/:]/).filter(Boolean).slice(-1)[0] || id;
+}
+function ago(t){ const s = Math.max(0, Math.round(Date.now()/1000 - t));
+  if (s < 60) return s + " s ago"; if (s < 3600) return Math.round(s/60) + " min ago";
+  if (s < 86400) return Math.round(s/3600) + " h ago"; return Math.round(s/86400) + " d ago"; }
+const clock = (t) => new Date(t*1000).toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"});
+const day = (t) => new Date(t*1000).toLocaleString(undefined, {month:"short", day:"numeric", hour:"2-digit", minute:"2-digit"});
+function setIcon(color){ $("favicon").href = "data:image/svg+xml," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='${color}'/></svg>`); }
+
+function render(){
+  const s = S, last = s.last;
+  $("ver").textContent = "v" + s.version;
+  const hero = $("hero");
+  let cls = "", title, icon = "?", meta = "", why = "";
+  if (s.checking && !last) { title = "Checking Vero…"; meta = "The first check takes about a minute."; }
+  else if (!last) { title = "Not checked yet"; meta = 'Click "Check now".'; }
+  else {
+    cls = last.available ? "ok" : "bad"; icon = last.available ? "✓" : "×";
+    title = last.available ? "Vero is available" : "Vero is not available";
+    meta = `since ${day(s.since)} · last check ${ago(last.time)}`;
+    if (s.checking) meta = "Checking again now… · " + meta;
+    why = last.reason || "";
+  }
+  hero.className = "card hero " + cls + (s.checking ? " checking" : "");
+  $("lamp").textContent = icon; $("title").textContent = title; $("meta").textContent = meta; $("why").textContent = why;
+  document.title = (last ? (last.available ? "✓ " : "× ") : "") + "Vero Status";
+  setIcon(!last ? "#8a94a3" : last.available ? "#1f7a45" : "#9b1c2e");
+
+  const c = s.configured || {};
+  $("cfgName").textContent = prettyModel(c.model) || "unknown";
+  $("cfgId").textContent = c.model || "";
+  $("cfgSub").textContent = [c.provider && "provider " + c.provider, c.region].filter(Boolean).join(" · ") || "from vero config";
+  const asked = last && last.asked_model;
+  $("ansLabel").textContent = !last || last.available ? "Answered the last check" : "Asked in the last check: no answer";
+  $("ansName").textContent = prettyModel(asked) || "–";
+  $("ansId").textContent = asked || "";
+  $("ansSub").textContent = last ? [last.provider && "provider " + last.provider, last.vero_version].filter(Boolean).join(" · ") : "";
+
+  $("avail").textContent = s.availability_24h == null ? "–" : s.availability_24h + "%";
+  $("availSub").textContent = s.checks_24h ? `${s.checks_24h} check${s.checks_24h > 1 ? "s" : ""}` : "no checks yet";
+  $("took").textContent = last && last.available && last.seconds != null ? Math.round(last.seconds) + " s" : "–";
+  const iv = s.settings.interval_minutes;
+  $("every").textContent = iv ? `every ${iv} min` : "automatic checks are off";
+  tick();
+  $("dots").innerHTML = s.history.map(r => `<span class="${r.available ? "ok" : "bad"}" title="${day(r.time)}: ${r.available ? "available" : "not available"}${r.seconds != null ? ", " + Math.round(r.seconds) + " s" : ""}"></span>`).join("")
+    || '<span class="muted" style="width:auto;height:auto;background:none">none yet</span>';
+  $("checkBtn").disabled = s.checking; $("checkBtn").textContent = s.checking ? "Checking…" : "Check now";
+  $("found").textContent = s.settings.vero_found ? "Found: " + s.settings.vero_found : "Vero CLI not found automatically: enter its full path (in a terminal: where vero).";
+  $("foot").textContent = "Runs on this computer only (127.0.0.1). The check asks: \"Reply with exactly: OK\". No answers or secrets are stored.";
+  if (!settingsLoaded) {
+    $("sInterval").value = String(iv); $("sModel").value = s.settings.check_model;
+    $("sTimeout").value = s.settings.timeout_seconds; $("sPath").value = s.settings.vero_path; settingsLoaded = true;
+  }
+}
+function tick(){
+  if (!S) return;
+  const n = S.next_check;
+  if (S.checking) { $("next").textContent = "now"; return; }
+  if (!n) { $("next").textContent = "–"; return; }
+  const s = Math.max(0, Math.round(n - Date.now()/1000));
+  $("next").textContent = s < 60 ? `in ${s} s` : s < 3600 ? `in ${Math.ceil(s/60)} min` : "at " + clock(n);
+}
+async function load(){
+  try {
+    const r = await fetch("/api/state", {cache: "no-store"});
+    S = await r.json(); offline = false; render();
+  } catch (e) {
+    offline = true; $("hero").className = "card hero"; $("lamp").textContent = "!";
+    $("title").textContent = "Vero Status is not running"; $("meta").textContent = "Double-click Vero Status to start it.";
+  }
+  clearTimeout(timer); timer = setTimeout(load, S && S.checking ? 1500 : 5000);
+}
+async function post(path, body){
+  return fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: body ? JSON.stringify(body) : undefined});
+}
+$("checkBtn").addEventListener("click", async () => { $("checkBtn").disabled = true; await post("/api/check"); load(); });
+$("setBtn").addEventListener("click", () => { const p = $("settings"), open = !p.classList.contains("open");
+  p.classList.toggle("open", open); $("setBtn").setAttribute("aria-expanded", open); if (open) p.scrollIntoView({behavior: "smooth"}); });
+$("saveBtn").addEventListener("click", async () => {
+  const body = {interval_minutes: +$("sInterval").value, check_model: $("sModel").value.trim(),
+                timeout_seconds: Math.round(+$("sTimeout").value), vero_path: $("sPath").value.trim().replace(/^"|"$/g, "")};
+  const r = await post("/api/settings", body), d = await r.json().catch(() => ({}));
+  const m = $("saveMsg"); m.className = "msg " + (r.ok ? "ok" : "err"); m.textContent = r.ok ? "Saved." : (d.error || "Not saved.");
+  if (r.ok) { settingsLoaded = false; load(); }
+});
+$("quitBtn").addEventListener("click", async () => {
+  if (!confirm("Stop Vero Status? Checks stop until you start it again.")) return;
+  try { await post("/api/quit"); } catch (e) {}
+  clearTimeout(timer); $("stopped").classList.add("show");
+});
+setInterval(tick, 1000);
+load();
+})();
+</script>
+</body>
+</html>
