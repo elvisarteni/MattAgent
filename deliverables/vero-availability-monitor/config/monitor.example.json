@@ -1,0 +1,49 @@
+{
+  "vero": {
+    "command": "vero",
+    "model": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "prompt": "Reply with exactly: OK",
+    "expect": "OK",
+    "task_timeout_s": 180,
+    "task_args": [
+      "task",
+      "--json",
+      "-m",
+      "{model}",
+      "-t",
+      "{timeout}",
+      "-c",
+      "{workdir}",
+      "{prompt}"
+    ],
+    "version_args": [
+      "version"
+    ],
+    "env": {}
+  },
+  "checks": {
+    "cli": true,
+    "task": true,
+    "chat": false
+  },
+  "chat": {
+    "url": "https://verostudio.sw.nxp.com/mcp",
+    "token_env": "VERO_CHAT_TOKEN",
+    "timeout_s": 30,
+    "ca_bundle": ""
+  },
+  "thresholds_s": {
+    "task_slow": 90,
+    "chat_slow": 10
+  },
+  "schedule": {
+    "interval_minutes": 15,
+    "run_in_dashboard": true
+  },
+  "retention_days": 90,
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8766
+  },
+  "data_dir": "data"
+}

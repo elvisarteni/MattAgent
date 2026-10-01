@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vero Status</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%231f7a45'/%3E%3C/svg%3E">
+<!--STATIC_DATA-->
+<style>
+:root{
+  --ink:#1b2230; --mut:#5d6878; --line:#dde2ea; --paper:#ffffff; --soft:#f4f6f9; --card:#ffffff;
+  --brand:#0a6aa1; --up:#1f7a45; --deg:#a8500b; --down:#9b1c2e; --unk:#b7bfcb;
+  --up-bg:#e8f4ed; --deg-bg:#fbf0e6; --down-bg:#f8e7ea; --unk-bg:#f1f3f6;
+  --sans:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#e6eaf0; --mut:#9aa5b4; --line:#2c3441; --paper:#12161d; --soft:#1a2029; --card:#161b23;
+    --brand:#4fa8dc; --up:#4cc38a; --deg:#e39a4b; --down:#f06b7f; --unk:#4a5363;
+    --up-bg:#15291f; --deg-bg:#2e2214; --down-bg:#311a20; --unk-bg:#1d232c;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#e6eaf0; --mut:#9aa5b4; --line:#2c3441; --paper:#12161d; --soft:#1a2029; --card:#161b23;
+  --brand:#4fa8dc; --up:#4cc38a; --deg:#e39a4b; --down:#f06b7f; --unk:#4a5363;
+  --up-bg:#15291f; --deg-bg:#2e2214; --down-bg:#311a20; --unk-bg:#1d232c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 var(--sans)}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 24px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;
+  padding-bottom:16px;border-bottom:1px solid var(--line)}
+.kicker{font-size:12.5px;color:var(--mut)}
+h1{font-size:24px;margin:2px 0 0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:15px;margin:0 0 2px}
+.sub{font-size:12.5px;color:var(--mut);margin-bottom:10px}
+.hright{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:4px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--soft);color:var(--mut)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--unk);flex:none}
+.pill.live .dot{background:var(--up);animation:pulse 2s infinite}
+.pill.busy .dot{background:var(--brand);animation:pulse 1s infinite}
+.pill.down .dot{background:var(--down)}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none!important}}
+button,a.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:6px;padding:6px 12px;cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+button:disabled{opacity:.55;cursor:default}
+button:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.hero{margin-top:18px;border-radius:10px;padding:20px 22px;display:flex;gap:18px;align-items:center;
+  border:1px solid var(--line);background:var(--unk-bg)}
+.hero .big{width:46px;height:46px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:22px;background:var(--unk)}
+.hero h2{font-size:22px;margin:0}
+.hero .meta{color:var(--mut);font-size:13px;margin-top:2px}
+.hero .why{margin-top:6px;font-size:13px}
+.hero.s-up{background:var(--up-bg);border-color:color-mix(in srgb,var(--up) 35%,var(--line))} .hero.s-up .big{background:var(--up)}
+.hero.s-degraded{background:var(--deg-bg);border-color:color-mix(in srgb,var(--deg) 35%,var(--line))} .hero.s-degraded .big{background:var(--deg)}
+.hero.s-down{background:var(--down-bg);border-color:color-mix(in srgb,var(--down) 35%,var(--line))} .hero.s-down .big{background:var(--down)}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.comp .top{display:flex;align-items:center;gap:8px;font-weight:600}
+.comp .st{margin-left:auto;font-size:12px;font-weight:600}
+.comp .line{font-size:12.5px;color:var(--mut);margin-top:4px;overflow-wrap:anywhere}
+.comp.off{opacity:.6}
+.kpi .l{font-size:12px;color:var(--mut)}
+.kpi .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.c-up{color:var(--up)} .c-degraded{color:var(--deg)} .c-down{color:var(--down)} .c-unknown{color:var(--mut)}
+.bg-up{background:var(--up)} .bg-degraded{background:var(--deg)} .bg-down{background:var(--down)} .bg-unknown{background:var(--unk)}
+.section{margin-top:14px}
+.tl-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line);padding:5px 11px}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+.bars{display:flex;gap:2px;height:38px;margin:12px 0 4px;align-items:stretch}
+.bars span{flex:1;border-radius:2px;min-width:1px}
+.bars span:hover{outline:2px solid var(--ink);outline-offset:1px}
+.axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--mut);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap;vertical-align:top}
+th{font-weight:600;color:var(--mut);font-size:12px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.why{white-space:normal;min-width:220px;color:var(--mut)}
+tr.new td{animation:flash 2.4s ease-out}
+@keyframes flash{from{background:color-mix(in srgb,var(--brand) 18%,transparent)}to{background:transparent}}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.mini{display:inline-flex;gap:4px;align-items:center;margin-right:8px;font-size:12px;color:var(--mut)}
+.mini .dot{width:8px;height:8px}
+.empty{padding:22px 8px;text-align:center;color:var(--mut)}
+footer{margin-top:22px;font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px 18px}
+footer code{font-family:var(--mono);font-size:11.5px}
+.static-only{display:none}
+body.static .live-only{display:none!important}
+body.static .static-only{display:inline-flex}
+@media (max-width:820px){.grid3{grid-template-columns:1fr}}
+@media (max-width:560px){.wrap{padding:16px 16px 40px}.hero{padding:16px}.hero h2{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">Quality AI Automation · ASPF-1578</div>
+      <h1>Vero status</h1>
+    </div>
+    <div class="hright">
+      <span class="pill live-only" id="live"><span class="dot"></span><span id="liveText">Connecting…</span></span>
+      <span class="pill live-only"><span id="nextText">Next check: –</span></span>
+      <span class="pill static-only"><span class="dot"></span><span id="staticText">Snapshot</span></span>
+      <button class="primary live-only" id="runBtn" type="button">Check now</button>
+      <a class="btn live-only" id="csvBtn" href="/api/export.csv">Export CSV</a>
+      <button id="themeBtn" type="button" aria-label="Toggle light or dark theme">Theme</button>
+    </div>
+  </header>
+
+  <section class="hero" id="hero" aria-live="polite">
+    <div class="big" id="heroIcon">?</div>
+    <div>
+      <h2 id="heroTitle">Loading…</h2>
+      <div class="meta" id="heroMeta"></div>
+      <div class="why" id="heroWhy"></div>
+    </div>
+  </section>
+
+  <section class="grid3" id="components" aria-label="Components"></section>
+  <section class="grid3" id="kpis" aria-label="Availability"></section>
+
+  <section class="card section">
+    <div class="tl-head">
+      <div><h2>Status over time</h2><div class="sub" id="tlSub">Each bar is the worst status in its time slot.</div></div>
+      <div class="seg live-only" id="range" role="group" aria-label="Time range">
+        <button type="button" data-h="1">1 h</button><button type="button" data-h="6">6 h</button>
+        <button type="button" data-h="24">24 h</button><button type="button" data-h="168">7 d</button>
+        <button type="button" data-h="720">30 d</button>
+      </div>
+    </div>
+    <div class="bars" id="bars"></div>
+    <div class="axis"><span id="axL"></span><span id="axR">now</span></div>
+    <div class="legend">
+      <span><i class="bg-up"></i>available</span><span><i class="bg-degraded"></i>degraded (slow, partial)</span>
+      <span><i class="bg-down"></i>unavailable</span><span><i class="bg-unknown"></i>no check</span>
+      <span id="counts"></span>
+    </div>
+  </section>
+
+  <section class="card section">
+    <h2>Incidents</h2>
+    <div class="sub">Periods where Vero was not fully available, newest first.</div>
+    <div class="tw"><table id="incidents"></table></div>
+  </section>
+
+  <section class="card section">
+    <h2>Recent checks <span class="sub live-only">· live</span></h2>
+    <div class="tw"><table id="recent"></table></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const STATIC = window.STATIC_DATA || null;
+const $ = (id) => document.getElementById(id);
+const S = {up:"available", degraded:"degraded", down:"unavailable", unknown:"no data"};
+const TITLE = {up:"Vero is available", degraded:"Vero is degraded", down:"Vero is unavailable", unknown:"No check yet"};
+const ICON = {up:"✓", degraded:"!", down:"×", unknown:"?"};
+const COMP = {cli:["Vero CLI", "installed and starts (vero version)"],
+              task:["Vero task", "end-to-end answer through the model"],
+              chat:["Vero Chat", "MCP handshake (no model call)"]};
+const state = {hours: 24, data: null, es: null, t: null, nextRun: null, running: false};
+try { const h = +localStorage.getItem("vam.hours"); if ([1,6,24,168,720].includes(h)) state.hours = h; } catch(e){}
+try { const t = localStorage.getItem("vam.theme"); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nowS = () => STATIC ? STATIC.now : Date.now()/1000;
+function dur(s){ s = Math.max(0, Math.round(s)); if (s < 60) return s + " s"; if (s < 3600) return Math.round(s/60) + " min";
+  if (s < 86400) { const h = Math.floor(s/3600), m = Math.round((s%3600)/60); return h + " h" + (m ? " " + m + " min" : ""); }
+  const d = Math.floor(s/86400), h = Math.round((s%86400)/3600); return d + " d" + (h ? " " + h + " h" : ""); }
+const ago = (e) => e ? dur(nowS() - e) + " ago" : "never";
+const when = (e) => new Date(e*1000).toLocaleString(undefined,{month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+const pct = (v) => v == null ? "–" : (v >= 99.995 ? "100" : v.toFixed(v >= 99 ? 2 : 1)) + "%";
+const pctClass = (v) => v == null ? "unknown" : v >= 99 ? "up" : v >= 95 ? "degraded" : "down";
+const badge = (s) => `<span class="badge c-${esc(s)}">${esc(S[s] || s)}</span>`;
+const secs = (ms) => ms == null ? "–" : (ms/1000).toFixed(ms < 10000 ? 1 : 0) + " s";
+
+async function load(){
+  if (STATIC) return render(STATIC);
+  try { const r = await fetch("/api/status?hours=" + state.hours, {cache:"no-store"}); render(await r.json()); }
+  catch(e){ setLive("down", "Server not reachable"); }
+}
+function reload(){ clearTimeout(state.t); state.t = setTimeout(load, 500); }
+
+function render(d){
+  state.data = d;
+  document.querySelectorAll("#range button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.h === state.hours));
+  $("csvBtn").href = "/api/export.csv?hours=" + d.range_hours;
+  const c = d.current, hero = $("hero");
+  hero.className = "hero s-" + c.status;
+  $("heroIcon").textContent = ICON[c.status];
+  $("heroTitle").textContent = TITLE[c.status];
+  const last = d.recent[0];
+  $("heroMeta").textContent = c.since ? `since ${when(c.since)} (${dur(nowS() - c.since)}) · last check ${ago(last && last.epoch)}` : "Run a check to see the status.";
+  $("heroWhy").textContent = (c.status !== "up" && last && last.reason) ? "Reason: " + last.reason : "";
+  document.title = (c.status === "up" ? "✓ " : c.status === "unknown" ? "" : "⚠ ") + "Vero Status";
+
+  $("components").innerHTML = ["cli","task","chat"].map(k => {
+    const x = d.components[k] || {enabled:false}, s = x.enabled ? (x.status || "unknown") : "unknown";
+    const facts = !x.enabled ? "not enabled" : [x.version, x.model_id && ("model " + x.model_id),
+      x.duration_ms != null && ("took " + secs(x.duration_ms)), x.epoch && ("checked " + ago(x.epoch))].filter(Boolean).join(" · ");
+    return `<div class="card comp${x.enabled ? "" : " off"}"><div class="top"><span class="dot bg-${s}"></span>${COMP[k][0]}
+      <span class="st c-${s}">${x.enabled ? esc(S[s]) : "off"}</span></div>
+      <div class="line">${COMP[k][1]}</div><div class="line">${esc(facts)}</div>
+      ${x.enabled && x.detail ? `<div class="line c-${s}">${esc(x.detail)}</div>` : ""}</div>`;
+  }).join("");
+
+  $("kpis").innerHTML = [["Availability, last 24 h", d.availability["24h"]], ["Last 7 days", d.availability["7d"]],
+    ["Last 30 days", d.availability["30d"]]].map(([l, v]) =>
+    `<div class="card kpi"><div class="l">${l}</div><div class="v c-${pctClass(v)}">${pct(v)}</div></div>`).join("");
+
+  const tl = d.timeline, slot = tl.length > 1 ? tl[1].t - tl[0].t : 0;
+  $("bars").innerHTML = tl.map(b => `<span class="bg-${b.status}" title="${esc(when(b.t))} – ${esc(when(b.t + slot))}: ${esc(S[b.status])}${b.n ? ` (${b.n} check${b.n > 1 ? "s" : ""})` : ""}"></span>`).join("");
+  $("axL").textContent = tl.length ? when(tl[0].t) : "";
+  $("tlSub").textContent = `Each bar = ${dur(slot)}, coloured by the worst check in it.`;
+  const n = d.counts; $("counts").textContent = `· ${n.up} available, ${n.degraded} degraded, ${n.down} unavailable`;
+
+  $("incidents").innerHTML = d.incidents.length
+    ? `<thead><tr><th>Started</th><th>Duration</th><th>Worst</th><th class="n">Checks</th><th>Reason</th></tr></thead><tbody>` +
+      d.incidents.map(i => `<tr><td>${when(i.start)}</td><td>${dur(i.duration_s)}${i.end == null ? " · <b>ongoing</b>" : ""}</td>
+        <td>${badge(i.worst)}</td><td class="n">${i.runs}</td><td class="why">${esc(i.reason)}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td class="empty">No incidents in this range.</td></tr></tbody>`;
+
+  renderRecent(d.recent);
+  footer(d);
+  state.nextRun = d.state.next_run; setRunning(d.state.running); tick();
+  if (STATIC) $("staticText").textContent = `Snapshot · ${d.range_hours >= 48 ? d.range_hours/24 + " d" : d.range_hours + " h"} · ${when(d.now)}`;
+}
+
+function row(r, isNew){
+  const ck = (r.checks || []).map(c => `<span class="mini" title="${esc(c.check_name)}: ${esc(c.detail || S[c.status])}"><span class="dot bg-${esc(c.status)}"></span>${esc(c.check_name)}</span>`).join("");
+  const task = (r.checks || []).find(c => c.check_name === "task");
+  return `<tr${isNew ? ' class="new"' : ""}><td>${when(r.epoch)}</td><td>${badge(r.overall)}</td><td>${ck}</td>
+    <td class="n">${task ? secs(task.duration_ms) : "–"}</td><td class="why">${esc(r.reason || "")}</td></tr>`;
+}
+function renderRecent(list){
+  $("recent").innerHTML = `<thead><tr><th>Time</th><th>Result</th><th>Checks</th><th class="n">Task time</th><th>Reason</th></tr></thead><tbody>` +
+    (list.length ? list.map(r => row(r, false)).join("") : `<tr><td colspan="5" class="empty">No checks yet. Click <b>Check now</b>.</td></tr>`) + "</tbody>";
+}
+function footer(d){
+  const c = d.config;
+  $("foot").innerHTML = [`Prompt <code>${esc(c.prompt)}</code>`, `Model <code>${esc(c.model)}</code>`,
+    `Every ${c.interval_minutes} min (${d.state.scheduler === "dashboard" ? "dashboard timer" : "Task Scheduler"})`,
+    `Task timeout ${c.task_timeout_s} s, slow above ${c.task_slow_s} s`, `vero-availability ${esc(d.tool_version)}`]
+    .map(x => `<span>${x}</span>`).join("");
+}
+
+function setLive(cls, text){ $("live").className = "pill live-only " + cls; $("liveText").textContent = text; }
+function setRunning(r){
+  state.running = r; $("runBtn").disabled = !!r; $("runBtn").textContent = r ? "Checking…" : "Check now";
+  if (state.es && state.es.readyState === 1) setLive(r ? "busy" : "live", r ? "Checking Vero…" : "Live");
+}
+function tick(){
+  if (STATIC || !state.nextRun) { $("nextText").textContent = "Next check: –"; return; }
+  const s = Math.max(0, Math.round(state.nextRun - Date.now()/1000));
+  $("nextText").textContent = `Next check in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+}
+function connect(){
+  const es = new EventSource("/api/stream"); state.es = es;
+  es.onopen = () => setRunning(state.running);
+  es.onerror = () => setLive("down", "Reconnecting…");
+  es.addEventListener("state", ev => { const s = JSON.parse(ev.data); state.nextRun = s.next_run; setRunning(s.running); tick(); });
+  es.addEventListener("run", ev => {
+    const r = JSON.parse(ev.data), tb = $("recent").tBodies[0];
+    if (tb) { if (tb.querySelector(".empty")) tb.innerHTML = ""; tb.insertAdjacentHTML("afterbegin", row(r, true)); }
+    reload();
+  });
+}
+
+if (STATIC) { document.body.classList.add("static"); render(STATIC); }
+else {
+  document.querySelectorAll("#range button").forEach(b => b.addEventListener("click", () => {
+    state.hours = +b.dataset.h; try { localStorage.setItem("vam.hours", state.hours); } catch(e){} load(); }));
+  $("runBtn").addEventListener("click", async () => {
+    setRunning(true);
+    try { const r = await fetch("/api/check", {method:"POST"}); if (r.status >= 400 && r.status !== 409) setRunning(false); }
+    catch(e){ setRunning(false); }
+  });
+  load().then(connect);
+  setInterval(tick, 1000);
+  setInterval(load, 60000);
+}
+$("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const n = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = n;
+  try { localStorage.setItem("vam.theme", n); } catch(e){}
+});
+})();
+</script>
+</body>
+</html>
