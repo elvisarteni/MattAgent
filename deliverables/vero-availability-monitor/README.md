@@ -20,7 +20,7 @@ Result per run: **available**, **degraded** (slow, unexpected answer, or a secon
 
 Python 3.8+ only, no pip, no admin rights.
 
-1. Get the folder to e.g. `C:\Tools\vero-availability-monitor\` (git clone, or rebuild from `VeroAvailabilityMonitor_3.0.0_REBUILD.md`).
+1. Get the folder to e.g. `C:\Tools\vero-availability-monitor\` (git clone, or let an AI rebuild it from `VeroAvailabilityMonitor_3.0.0_Source.pdf`).
 2. Optional: `setup_demo.bat` (fake CLI + sample data).
 3. `setup.bat`: questions -> one real test -> **Y** installs the scheduled check, the status page at logon and a desktop shortcut "Vero Status".
 4. `status.bat` any time; `uninstall.bat` to remove (data kept).
@@ -38,4 +38,5 @@ python -m unittest discover -s tests -t .     # 64 tests, fake CLI + fake MCP se
 uvx ruff check . && uvx ruff format --check .  # lint + format
 uvx mypy && uvx mypy --platform win32          # strict typing, Linux and Windows
 python scripts/build_rebuild_md.py             # dist/VeroAvailabilityMonitor_<ver>_REBUILD.md
+uv run --no-project --with reportlab python scripts/build_rebuild_pdf.py   # dist/..._Source.pdf + verify_rebuild.py
 ```

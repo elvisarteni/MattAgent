@@ -4,7 +4,7 @@
 whether Vero (CLI, optionally Chat) is available and shows it on a status page. It is sent as a readable document because archives
 and scripts cannot be attached. Nothing in it runs by itself. Read it before rebuilding.
 
-- 59 files, all plain text, Python 3.8+ standard library only (no downloads, no pip).
+- 61 files, all plain text, Python 3.8+ standard library only (no downloads, no pip).
 - The HTML guide `VeroAvailabilityMonitor_Guide.html` is sent separately; put it in `docs/`.
 - `VERO_CONTEXT.md` (included below) explains the architecture, contracts and rules.
 
@@ -44,12 +44,12 @@ Do not run `setup.bat`, `install`, `doctor`, `check` or the real Vero CLI yourse
 | 2 | `.gitattributes` | 134 | LF | `de5647982a8a835e…` |
 | 3 | `.gitignore` | 209 | LF | `7756a240e02140de…` |
 | 4 | `AGENTS.md` | 1423 | LF | `44800f1ef26c843a…` |
-| 5 | `CHANGELOG.md` | 1325 | LF | `0cec48b50388071f…` |
+| 5 | `CHANGELOG.md` | 1529 | LF | `e0c7d175509ba7de…` |
 | 6 | `CODEOWNERS` | 61 | LF | `695a47f89d8c8523…` |
 | 7 | `CONTRIBUTING.md` | 502 | LF | `0309ecb367654505…` |
-| 8 | `README.md` | 1983 | LF | `bbdf950dc7b1985c…` |
-| 9 | `START_HERE.txt` | 1386 | CRLF | `a6edd8fc74e40964…` |
-| 10 | `VERO_CONTEXT.md` | 9540 | LF | `e62427487f95e67c…` |
+| 8 | `README.md` | 2113 | LF | `9becd6a527151eea…` |
+| 9 | `START_HERE.txt` | 1567 | CRLF | `2d1c4ef3ea253fcd…` |
+| 10 | `VERO_CONTEXT.md` | 9579 | LF | `d3fa978304042979…` |
 | 11 | `check_now.bat` | 154 | CRLF | `4bb4f1d8e7f19ffd…` |
 | 12 | `config/monitor.example.json` | 878 | LF | `9e78c6a7a86a94f2…` |
 | 13 | `docs/ARCHITECTURE.md` | 2230 | LF | `44ff1006d66b37de…` |
@@ -63,42 +63,44 @@ Do not run `setup.bat`, `install`, `doctor`, `check` or the real Vero CLI yourse
 | 21 | `requirements.txt` | 106 | LF | `97a344f156562554…` |
 | 22 | `scripts/_py.bat` | 580 | CRLF | `ee03008dcfe04647…` |
 | 23 | `scripts/build_rebuild_md.py` | 6550 | LF | `d2630ee8d7d70ea5…` |
-| 24 | `scripts/fake_vero.py` | 2865 | LF | `8ac166e8e0e0b845…` |
-| 25 | `scripts/seed_demo_data.py` | 2302 | LF | `de8000130adac8dd…` |
-| 26 | `setup.bat` | 957 | CRLF | `1676ff1a7460c049…` |
-| 27 | `setup_demo.bat` | 372 | CRLF | `4881f05e4c2bfe05…` |
-| 28 | `src/vero_monitor/__init__.py` | 145 | LF | `c77b5ab0da53e274…` |
-| 29 | `src/vero_monitor/__main__.py` | 52 | LF | `13a1a5b340cdcfc1…` |
-| 30 | `src/vero_monitor/checks/__init__.py` | 1593 | LF | `4e22f94dd92edc74…` |
-| 31 | `src/vero_monitor/checks/process.py` | 3188 | LF | `bfeb6ac9be3fe90a…` |
-| 32 | `src/vero_monitor/checks/vero_chat.py` | 3463 | LF | `f08bf1bf4287d3cc…` |
-| 33 | `src/vero_monitor/checks/vero_cli.py` | 5375 | LF | `3ddceef9910b68e3…` |
-| 34 | `src/vero_monitor/cli.py` | 13105 | LF | `4c4986cdc26cc381…` |
-| 35 | `src/vero_monitor/config.py` | 7586 | LF | `e7d56144b413831f…` |
-| 36 | `src/vero_monitor/domain.py` | 5100 | LF | `a6baf2d88794a41f…` |
-| 37 | `src/vero_monitor/report.py` | 3403 | LF | `ecf99cc7db720040…` |
-| 38 | `src/vero_monitor/runner.py` | 4826 | LF | `9c72b7358f12d5c0…` |
-| 39 | `src/vero_monitor/scheduler.py` | 10977 | LF | `758cf1aba70498ae…` |
-| 40 | `src/vero_monitor/server.py` | 7423 | LF | `42a1833e37c8f670…` |
-| 41 | `src/vero_monitor/store.py` | 5943 | LF | `b144a73706a236cc…` |
-| 42 | `src/vero_monitor/web/dashboard.html` | 18415 | LF | `d43abb27805424ff…` |
-| 43 | `start_dashboard.bat` | 199 | CRLF | `c9b963844055acd4…` |
-| 44 | `status.bat` | 169 | CRLF | `6a754b5b8c1f74cd…` |
-| 45 | `tests/__init__.py` | 20 | LF | `7e9af23c4d8769e8…` |
-| 46 | `tests/fixtures/.gitkeep` | 26 | LF | `2be8225f3a9ad9e9…` |
-| 47 | `tests/fixtures/vero_task_stream.ndjson` | 937 | LF | `e4018110354d7118…` |
-| 48 | `tests/helpers.py` | 1003 | LF | `0b35f2b3014752b8…` |
-| 49 | `tests/integration/__init__.py` | 79 | LF | `629eee0283bc7304…` |
-| 50 | `tests/integration/test_chat.py` | 3559 | LF | `4462c0068b40fc9d…` |
-| 51 | `tests/integration/test_checks.py` | 4391 | LF | `d033eb5c33fbbed3…` |
-| 52 | `tests/integration/test_runner_server.py` | 6369 | LF | `3bd30361d1bed252…` |
-| 53 | `tests/unit/__init__.py` | 56 | LF | `34d8097b45b98a68…` |
-| 54 | `tests/unit/test_config.py` | 3057 | LF | `b089b300e44f15ca…` |
-| 55 | `tests/unit/test_domain.py` | 4177 | LF | `9401a448b001527c…` |
-| 56 | `tests/unit/test_parsers.py` | 3486 | LF | `83b0765d6362af16…` |
-| 57 | `tests/unit/test_scheduler.py` | 1904 | LF | `6d6460ec569ce5a1…` |
-| 58 | `uninstall.bat` | 182 | CRLF | `bce5f932e3942a7e…` |
-| 59 | `vam.py` | 273 | LF | `25f30ade67d0e13c…` |
+| 24 | `scripts/build_rebuild_pdf.py` | 9533 | LF | `943c126f1de7b3ad…` |
+| 25 | `scripts/fake_vero.py` | 2865 | LF | `8ac166e8e0e0b845…` |
+| 26 | `scripts/seed_demo_data.py` | 2302 | LF | `de8000130adac8dd…` |
+| 27 | `setup.bat` | 957 | CRLF | `1676ff1a7460c049…` |
+| 28 | `setup_demo.bat` | 372 | CRLF | `4881f05e4c2bfe05…` |
+| 29 | `src/vero_monitor/__init__.py` | 145 | LF | `c77b5ab0da53e274…` |
+| 30 | `src/vero_monitor/__main__.py` | 52 | LF | `13a1a5b340cdcfc1…` |
+| 31 | `src/vero_monitor/checks/__init__.py` | 1593 | LF | `4e22f94dd92edc74…` |
+| 32 | `src/vero_monitor/checks/process.py` | 3188 | LF | `bfeb6ac9be3fe90a…` |
+| 33 | `src/vero_monitor/checks/vero_chat.py` | 3463 | LF | `f08bf1bf4287d3cc…` |
+| 34 | `src/vero_monitor/checks/vero_cli.py` | 5375 | LF | `3ddceef9910b68e3…` |
+| 35 | `src/vero_monitor/cli.py` | 13105 | LF | `4c4986cdc26cc381…` |
+| 36 | `src/vero_monitor/config.py` | 7586 | LF | `e7d56144b413831f…` |
+| 37 | `src/vero_monitor/domain.py` | 5100 | LF | `a6baf2d88794a41f…` |
+| 38 | `src/vero_monitor/report.py` | 3403 | LF | `ecf99cc7db720040…` |
+| 39 | `src/vero_monitor/runner.py` | 4826 | LF | `9c72b7358f12d5c0…` |
+| 40 | `src/vero_monitor/scheduler.py` | 10977 | LF | `758cf1aba70498ae…` |
+| 41 | `src/vero_monitor/server.py` | 7423 | LF | `42a1833e37c8f670…` |
+| 42 | `src/vero_monitor/store.py` | 5943 | LF | `b144a73706a236cc…` |
+| 43 | `src/vero_monitor/web/dashboard.html` | 18415 | LF | `d43abb27805424ff…` |
+| 44 | `start_dashboard.bat` | 199 | CRLF | `c9b963844055acd4…` |
+| 45 | `status.bat` | 169 | CRLF | `6a754b5b8c1f74cd…` |
+| 46 | `tests/__init__.py` | 20 | LF | `7e9af23c4d8769e8…` |
+| 47 | `tests/fixtures/.gitkeep` | 26 | LF | `2be8225f3a9ad9e9…` |
+| 48 | `tests/fixtures/vero_task_stream.ndjson` | 937 | LF | `e4018110354d7118…` |
+| 49 | `tests/helpers.py` | 1003 | LF | `0b35f2b3014752b8…` |
+| 50 | `tests/integration/__init__.py` | 79 | LF | `629eee0283bc7304…` |
+| 51 | `tests/integration/test_chat.py` | 3559 | LF | `4462c0068b40fc9d…` |
+| 52 | `tests/integration/test_checks.py` | 4391 | LF | `d033eb5c33fbbed3…` |
+| 53 | `tests/integration/test_runner_server.py` | 6369 | LF | `3bd30361d1bed252…` |
+| 54 | `tests/unit/__init__.py` | 56 | LF | `34d8097b45b98a68…` |
+| 55 | `tests/unit/test_config.py` | 3057 | LF | `b089b300e44f15ca…` |
+| 56 | `tests/unit/test_domain.py` | 4177 | LF | `9401a448b001527c…` |
+| 57 | `tests/unit/test_parsers.py` | 3486 | LF | `83b0765d6362af16…` |
+| 58 | `tests/unit/test_scheduler.py` | 1904 | LF | `6d6460ec569ce5a1…` |
+| 59 | `uninstall.bat` | 182 | CRLF | `bce5f932e3942a7e…` |
+| 60 | `uv.lock` | 145 | LF | `e01fcba4c5572550…` |
+| 61 | `vam.py` | 273 | LF | `25f30ade67d0e13c…` |
 
 ---
 
@@ -204,6 +206,8 @@ Rebuilt from scratch as an **availability** monitor (scope change from the 0.x l
 - Kept from 0.2: guided setup, Task Scheduler XML (laptop-safe), dashboard at logon, Host/Origin checks, lock file,
   stale-lock recovery, rotating log, run manifests, rebuild document for channels without archives.
 - Coexists with the 0.x latency monitor: different port (8766), task names and data.
+- Distribution as documents only: `..._Source.pdf` (numbered rows, visible space mark, SHA-256 verify script;
+  rebuild verified byte-identical with pypdf and pdfplumber extraction) and the guide as PDF.
 ````
 
 ### FILE: `CODEOWNERS`
@@ -256,7 +260,7 @@ Result per run: **available**, **degraded** (slow, unexpected answer, or a secon
 
 Python 3.8+ only, no pip, no admin rights.
 
-1. Get the folder to e.g. `C:\Tools\vero-availability-monitor\` (git clone, or rebuild from `VeroAvailabilityMonitor_3.0.0_REBUILD.md`).
+1. Get the folder to e.g. `C:\Tools\vero-availability-monitor\` (git clone, or let an AI rebuild it from `VeroAvailabilityMonitor_3.0.0_Source.pdf`).
 2. Optional: `setup_demo.bat` (fake CLI + sample data).
 3. `setup.bat`: questions -> one real test -> **Y** installs the scheduled check, the status page at logon and a desktop shortcut "Vero Status".
 4. `status.bat` any time; `uninstall.bat` to remove (data kept).
@@ -274,6 +278,7 @@ python -m unittest discover -s tests -t .     # 64 tests, fake CLI + fake MCP se
 uvx ruff check . && uvx ruff format --check .  # lint + format
 uvx mypy && uvx mypy --platform win32          # strict typing, Linux and Windows
 python scripts/build_rebuild_md.py             # dist/VeroAvailabilityMonitor_<ver>_REBUILD.md
+uv run --no-project --with reportlab python scripts/build_rebuild_pdf.py   # dist/..._Source.pdf + verify_rebuild.py
 ```
 ````
 
@@ -285,6 +290,9 @@ VERO AVAILABILITY MONITOR 3  (ASPF-1578)
 
 Shows whether Vero is available right now, with history, on a local status page.
 Needs Python 3.8+ only. No admin rights, no internet download, nothing to install with pip.
+
+0. If you received VeroAvailabilityMonitor_3.0.0_Source.pdf: ask Vero CLI (or another AI
+   assistant) to follow the instructions on page 1 and rebuild the project in C:\Tools.
 
 1. Put this folder somewhere local and fixed, e.g.  C:\Tools\vero-availability-monitor
    (not Downloads, not a OneDrive folder)
@@ -379,7 +387,7 @@ src/vero_monitor/
   server.py        HTTP: / , /api/status, /api/stream (SSE), POST /api/check, /api/export.csv, /api/health
   cli.py           commands (section 5)
   web/dashboard.html   status page, one file, vanilla JS, no CDN
-scripts/  fake_vero.py (stand-in CLI), seed_demo_data.py, build_rebuild_md.py, _py.bat
+scripts/  fake_vero.py (stand-in CLI), seed_demo_data.py, build_rebuild_md.py, build_rebuild_pdf.py (dev, reportlab), _py.bat
 tests/    unit/ (domain, parsers, config, scheduler)  integration/ (fake CLI, fake MCP, runner, HTTP)
 docs/     guide HTML, PRD, ARCHITECTURE, DESIGN_SYSTEM, decisions/ADR-001..004
 *.bat     setup, setup_demo, start_dashboard, check_now, status, uninstall
@@ -921,6 +929,235 @@ Do not run `setup.bat`, `install`, `doctor`, `check` or the real Vero CLI yourse
 if __name__ == "__main__":
     main()
 `````
+
+### FILE: `scripts/build_rebuild_pdf.py`
+
+````python
+#!/usr/bin/env python3
+"""Build dist/VeroAvailabilityMonitor_<version>_Source.pdf: the complete source as a PDF document.
+
+For channels that accept only documents. Developer tool (needs reportlab):
+    uv run --with reportlab python scripts/build_rebuild_pdf.py
+
+Listing format (survives PDF text extraction, which drops blank lines and collapses spaces):
+    "  12 | content"   line 12 of the file; every MARK (U+2423, open box) in content is one space
+                       (used for leading spaces, runs of 2+ spaces and spaces at a row edge)
+    "  12 |"           line 12 is empty
+    "     + more"      continuation of the previous line (joined with nothing in between)
+The MARK character never appears in the sources (checked at build time).
+"""
+
+import hashlib
+import re
+import sys
+from pathlib import Path
+
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from vero_monitor import __version__  # noqa: E402
+
+SKIP_DIRS = {
+    "data",
+    "data-demo",
+    "reports",
+    "dist",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+}
+SKIP_SUFFIXES = (".pyc", ".log", ".egg-info")
+SKIP_FILES = {"config/monitor.json", "docs/VeroAvailabilityMonitor_Guide.html"}
+CRLF = (".bat",)
+CRLF_FILES = {"START_HERE.txt"}
+FONT_PATHS = ["/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", "C:/Windows/Fonts/consola.ttf"]
+SIZE, LEADING, MARGIN = 6.4, 7.7, 28
+PAGE_W, PAGE_H = landscape(A4)
+MARK = "\u2423"  # open box, shown for a space that extraction could lose
+
+
+def files():
+    for f in sorted(ROOT.rglob("*")):
+        rel = f.relative_to(ROOT)
+        if (
+            f.is_dir()
+            or SKIP_DIRS & set(rel.parts)
+            or any(part.endswith(SKIP_SUFFIXES) for part in rel.parts)
+            or rel.as_posix() in SKIP_FILES
+        ):
+            continue
+        yield rel.as_posix(), f.read_bytes().decode("utf-8").replace("\r\n", "\n")
+
+
+def lf_sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def protect(chunk: str) -> str:
+    """Mark every space an extractor could drop: leading, trailing, and runs of 2+."""
+    chunk = re.sub(r" {2,}", lambda m: MARK * len(m.group()), chunk)
+    if chunk.startswith(" "):
+        chunk = MARK + chunk[1:]
+    if chunk.endswith(" "):
+        chunk = chunk[:-1] + MARK
+    return chunk
+
+
+def encode(lines, width):
+    """Source lines -> listing rows (see module docstring)."""
+    rows = []
+    for n, line in enumerate(lines, 1):
+        head = f"{n:>4} |"
+        if not line:
+            rows.append(head)
+            continue
+        chunks = [line[i : i + width] for i in range(0, len(line), width)]
+        rows.append(f"{head} {protect(chunks[0])}")
+        rows.extend(f"     + {protect(c)}" for c in chunks[1:])
+    return rows
+
+
+VERIFY_TEMPLATE = """import hashlib, pathlib, sys
+# usage: py verify_rebuild.py C:\\Tools\\vero-availability-monitor
+root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "vero-availability-monitor")
+CRLF = {crlf!r}
+FILES = {{
+{entries}}}
+bad = 0
+for path, sha in FILES.items():
+    p = root / path
+    if not p.exists():
+        print("MISSING  ", path); bad += 1; continue
+    text = p.read_bytes().decode("utf-8").replace("\\r\\n", "\\n")
+    if hashlib.sha256(text.encode("utf-8")).hexdigest() != sha:
+        print("DIFFERENT", path); bad += 1; continue
+    want = text.replace("\\n", "\\r\\n") if path in CRLF else text
+    if p.read_bytes() != want.encode("utf-8"):
+        p.write_bytes(want.encode("utf-8")); print("fixed line endings", path)
+print("OK: all files match" if not bad else str(bad) + " file(s) wrong: recreate them from the document")
+sys.exit(1 if bad else 0)
+"""
+
+
+class Doc:
+    def __init__(self, path: Path, font: str):
+        self.c = canvas.Canvas(str(path), pagesize=(PAGE_W, PAGE_H))
+        self.c.setTitle(f"Vero Availability Monitor {__version__} - complete source for rebuild")
+        self.c.setAuthor("Quality AI Automation (ASPF-1578)")
+        self.c.setSubject("Source listing. A document only: nothing in it runs.")
+        self.font = font
+        self.page = 0
+        self.y = 0.0
+        self.new_page()
+
+    def new_page(self):
+        if self.page:
+            self.c.showPage()
+        self.page += 1
+        self.c.setFont(self.font, 6)
+        self.c.setFillGray(0.45)
+        self.c.drawString(MARGIN, PAGE_H - 16, f"Vero Availability Monitor {__version__} · source for rebuild · ASPF-1578")
+        self.c.drawRightString(PAGE_W - MARGIN, 12, f"page {self.page}")
+        self.c.setFillGray(0)
+        self.y = PAGE_H - MARGIN - 8
+
+    def row(self, text: str, size: float = SIZE, gray: float = 0):
+        if self.y < MARGIN:
+            self.new_page()
+        self.c.setFont(self.font, size)
+        self.c.setFillGray(gray)
+        self.c.drawString(MARGIN, self.y, text)
+        self.y -= max(LEADING, size * 1.25)
+
+    def gap(self, n: float = 1):
+        self.y -= LEADING * n
+
+    def save(self):
+        self.c.save()
+
+
+def main() -> None:
+    font_path = next((p for p in FONT_PATHS if Path(p).exists()), None)
+    if not font_path:
+        sys.exit("no monospace TTF font found (DejaVu Sans Mono or Consolas)")
+    pdfmetrics.registerFont(TTFont("Mono", font_path))
+    char_w = pdfmetrics.stringWidth("M", "Mono", SIZE)
+    width = int((PAGE_W - 2 * MARGIN) / char_w) - 8  # minus the "NNNN | " gutter
+    items = list(files())
+    bad = [p for p, t in items if MARK in t]
+    if bad:
+        sys.exit(f"MARK character found in {bad}: the listing would be ambiguous")
+    crlf = sorted(p for p, _ in items if p.endswith(CRLF) or p in CRLF_FILES)
+    out = ROOT / "dist" / f"VeroAvailabilityMonitor_{__version__}_Source.pdf"
+    out.parent.mkdir(exist_ok=True)
+    d = Doc(out, "Mono")
+
+    d.row(f"VERO AVAILABILITY MONITOR {__version__} - COMPLETE SOURCE FOR REBUILD", 13)
+    d.row("Jira ASPF-1578 · Quality AI Automation · a document only: nothing in it runs", 8, 0.35)
+    d.gap()
+    intro = f"""\
+What this is: the full source ({len(items)} text files) of a local tool that checks whether Vero (CLI, optionally Chat) is
+available and shows it on a status page. Python 3.8+ standard library only. The HTML/PDF guide is sent separately.
+
+INSTRUCTIONS FOR THE AI ASSISTANT (Vero CLI or other) - recreate the project folder EXACTLY:
+ 1. Create the folder vero-availability-monitor in the location the user gives (default C:\\Tools\\).
+ 2. Every file starts with a row  "=== FILE: <path> (<n> lines) ===" and ends with  "=== END FILE: <path> ===".
+ 3. Rows between them encode the file, one source line per numbered row:
+      "  12 | content"  -> line 12. Every {MARK} (open box) in the content is ONE SPACE. It marks leading
+                           spaces, runs of 2+ spaces and spaces at a row edge; single spaces between words
+                           are printed normally. The {MARK} character never occurs in the real files.
+      "  12 |"          -> line 12 is an empty line.
+      "     + more"     -> continuation of the previous line: append "more" directly (no space, no newline).
+    Ignore page headers/footers ("Vero Availability Monitor ... source for rebuild", "page N").
+    Line numbers must run 1..n without gaps; n is in the FILE row. Every file ends with a newline.
+ 4. Write files as UTF-8 without BOM, LF line endings. Do not reformat, translate, summarise or "fix" anything.
+ 5. Create verify_rebuild.py from the section VERIFY SCRIPT at the end (same row rules), OUTSIDE the project
+    folder, and run:  py verify_rebuild.py C:\\Tools\\vero-availability-monitor
+    It checks every file's SHA-256 and sets CRLF line endings where Windows needs them (.bat, START_HERE.txt).
+    Recreate any file reported MISSING or DIFFERENT, then run it again until it prints "OK: all files match".
+ 6. Run the tests inside the folder:  py -m unittest discover -s tests -t .    Expected: OK (64 tests).
+ 7. Tell the user it is ready and to double-click setup.bat (see START_HERE.txt).
+ Do not run setup.bat, install, doctor, check or the real Vero CLI unless the user asks.
+"""
+    for line in intro.splitlines():
+        d.row(line, 7.2)
+    d.gap()
+    d.row("FILE LIST (path · lines · line endings · SHA-256 of the content with LF endings)", 7.2)
+    for p, t in items:
+        lines = t.split("\n")[:-1] if t.endswith("\n") else t.split("\n")
+        d.row(f"  {p:<52} {len(lines):>5}  {'CRLF' if p in crlf else 'LF  '}  {lf_sha(t)}", 6.2)
+
+    for p, t in items:
+        lines = t.split("\n")[:-1] if t.endswith("\n") else t.split("\n")
+        d.new_page()
+        d.row(f"=== FILE: {p} ({len(lines)} lines) ===", 7.5)
+        for r in encode(lines, width):
+            d.row(r)
+        d.row(f"=== END FILE: {p} ===", 7.5)
+
+    entries = "".join(f"    {p!r}: {lf_sha(t)!r},\n" for p, t in items)
+    verify = VERIFY_TEMPLATE.format(crlf=crlf, entries=entries)
+    d.new_page()
+    vlines = verify.split("\n")[:-1]
+    d.row(f"=== VERIFY SCRIPT: verify_rebuild.py ({len(vlines)} lines) ===", 7.5)
+    for r in encode(vlines, width):
+        d.row(r)
+    d.row("=== END VERIFY SCRIPT ===", 7.5)
+    d.save()
+    (ROOT / "dist" / "verify_rebuild.py").write_text(verify, encoding="utf-8")
+    print(f"wrote {out} ({len(items)} files, {d.page} pages, {out.stat().st_size // 1024} KB, {width} chars per row)")
+
+
+if __name__ == "__main__":
+    main()
+````
 
 ### FILE: `scripts/fake_vero.py`
 
@@ -4275,6 +4512,19 @@ call scripts\_py.bat || exit /b 1
 pause
 ````
 
+### FILE: `uv.lock`
+
+````
+version = 1
+revision = 3
+requires-python = ">=3.8"
+
+[[package]]
+name = "vero-availability-monitor"
+version = "3.0.0"
+source = { editable = "." }
+````
+
 ### FILE: `vam.py`
 
 ````python
@@ -4342,9 +4592,9 @@ sys.exit(1 if bad else 0)
    "bytes": 1423
   },
   "CHANGELOG.md": {
-   "sha256_lf": "0cec48b50388071f2751a90f51a2b4a8eb7361e4f00512cc68c4e320851e8e3e",
+   "sha256_lf": "e0c7d175509ba7deea14ba3e4d0055de3d6787c1242210e24b8de0f8c7f9b7d7",
    "crlf": false,
-   "bytes": 1325
+   "bytes": 1529
   },
   "CODEOWNERS": {
    "sha256_lf": "695a47f89d8c85232ee4946424a5f6a87f2fcea7a945bbc6abb6701981b09d44",
@@ -4357,19 +4607,19 @@ sys.exit(1 if bad else 0)
    "bytes": 502
   },
   "README.md": {
-   "sha256_lf": "bbdf950dc7b1985c130f6def9c6ca51e3d5afb5f617b399fd1efca49a12794ef",
+   "sha256_lf": "9becd6a527151eeacdf2d886d603ab73d2ce8a65d02c1c683ba1d26da25f85de",
    "crlf": false,
-   "bytes": 1983
+   "bytes": 2113
   },
   "START_HERE.txt": {
-   "sha256_lf": "a6edd8fc74e409645f6c70c0c5b2393b75d4063c71da698deaae3394cbc0fe2f",
+   "sha256_lf": "2d1c4ef3ea253fcd055ee7882780ecd85636c481e38005f3f69db1bb9c61e871",
    "crlf": true,
-   "bytes": 1386
+   "bytes": 1567
   },
   "VERO_CONTEXT.md": {
-   "sha256_lf": "e62427487f95e67c6894698b3244ffaa826825f59967b46caee15dadec5a9775",
+   "sha256_lf": "d3fa978304042979db68092fd43a3788ded2c788dfc4798e49a9eadc2c20d22c",
    "crlf": false,
-   "bytes": 9540
+   "bytes": 9579
   },
   "check_now.bat": {
    "sha256_lf": "4bb4f1d8e7f19ffdc273ca2b4809be61f6d0644faba3bd4a1a7d8e5a81581748",
@@ -4435,6 +4685,11 @@ sys.exit(1 if bad else 0)
    "sha256_lf": "d2630ee8d7d70ea5e6b533de0df3eeeef1ac32d115e34c772f4536277000bac0",
    "crlf": false,
    "bytes": 6550
+  },
+  "scripts/build_rebuild_pdf.py": {
+   "sha256_lf": "943c126f1de7b3ad64188014fe7989b1d3a5eb3b87a28e54683c7accd1025109",
+   "crlf": false,
+   "bytes": 9533
   },
   "scripts/fake_vero.py": {
    "sha256_lf": "8ac166e8e0e0b845a37161c46ed3192ded0a91a35beb10222bfeac86289a6fd7",
@@ -4610,6 +4865,11 @@ sys.exit(1 if bad else 0)
    "sha256_lf": "bce5f932e3942a7e39f3611867464061e55713a513f0526388368abed454e464",
    "crlf": true,
    "bytes": 182
+  },
+  "uv.lock": {
+   "sha256_lf": "e01fcba4c5572550cf4f0d84f325540253b782395df574ab4981bbc8d033a9fd",
+   "crlf": false,
+   "bytes": 145
   },
   "vam.py": {
    "sha256_lf": "25f30ade67d0e13c78622e8bc991228535d2535de206892795e9da55f7d5f8f1",

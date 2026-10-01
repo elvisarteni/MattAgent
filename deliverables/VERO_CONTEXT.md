@@ -63,7 +63,7 @@ src/vero_monitor/
   server.py        HTTP: / , /api/status, /api/stream (SSE), POST /api/check, /api/export.csv, /api/health
   cli.py           commands (section 5)
   web/dashboard.html   status page, one file, vanilla JS, no CDN
-scripts/  fake_vero.py (stand-in CLI), seed_demo_data.py, build_rebuild_md.py, _py.bat
+scripts/  fake_vero.py (stand-in CLI), seed_demo_data.py, build_rebuild_md.py, build_rebuild_pdf.py (dev, reportlab), _py.bat
 tests/    unit/ (domain, parsers, config, scheduler)  integration/ (fake CLI, fake MCP, runner, HTTP)
 docs/     guide HTML, PRD, ARCHITECTURE, DESIGN_SYSTEM, decisions/ADR-001..004
 *.bat     setup, setup_demo, start_dashboard, check_now, status, uninstall

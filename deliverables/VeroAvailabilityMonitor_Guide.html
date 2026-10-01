@@ -232,7 +232,7 @@ svg.dia .dash{stroke-dasharray:5 4}
   <li><b>Get the folder</b> into <code>C:\Tools\vero-availability-monitor</code>. Use a local folder, not Downloads or OneDrive. There are two ways:
     <ul>
       <li><b>Git (recommended):</b> clone it from Bitbucket project QAI <span class="ph">&lt;&lt; repo URL &gt;&gt;</span>.</li>
-      <li><b>Rebuild document:</b> give <code>VeroAvailabilityMonitor_3.0.0_REBUILD.md</code> to Vero CLI or another AI assistant with: <i>"Follow the instructions at the top of this file and rebuild the project in C:\Tools"</i>. The assistant writes every file, checks each one against its SHA-256 and runs the tests. Then copy this guide into <code>docs\</code>.</li>
+      <li><b>Source PDF</b> (for channels that accept only documents): give <code>VeroAvailabilityMonitor_3.0.0_Source.pdf</code> to Vero CLI or another AI assistant with: <i>"Follow the instructions on page 1 of this PDF and rebuild the project in C:\Tools"</i>. Every source line is numbered, and a visible space mark keeps indentation safe through text extraction. A verify script with every file's SHA-256 confirms the rebuild is byte-identical; tested with two different PDF text extractors. The same content also exists as <code>VeroAvailabilityMonitor_3.0.0_REBUILD.md</code>.</li>
     </ul></li>
   <li><b>Optional demo:</b> double-click <code>setup_demo.bat</code>. It uses a fake Vero CLI and seven days of sample data, kept in <code>data-demo\</code>.</li>
   <li><b>Double-click <code>setup.bat</code>.</b> It asks seven questions; Enter keeps each default. Then it runs <code>doctor</code>, one real check that stores nothing (the task part takes about a minute), and asks <i>Install background monitoring? [Y/N]</i>.</li>
@@ -405,7 +405,7 @@ svg.dia .dash{stroke-dasharray:5 4}
 <h2 id="history">Version history</h2>
 <div class="tw"><table>
   <tr><th>Version</th><th>Date</th><th>Change</th><th>Author</th></tr>
-  <tr><td>3.0.0</td><td>2026-10-01</td><td>Rebuilt as an availability monitor on the measured Vero CLI/Chat contracts; layered structure, strict typing, 64 tests</td><td>Elvis-Nicolae Arteni</td></tr>
+  <tr><td>3.0.0</td><td>2026-10-01</td><td>Rebuilt as an availability monitor on the measured Vero CLI/Chat contracts; layered structure, strict typing, 64 tests; distributed as source PDF + guide PDF</td><td>Elvis-Nicolae Arteni</td></tr>
   <tr><td>0.2.0</td><td>2026-09-30</td><td>Latency monitor: review fixes, guided setup, distribution formats</td><td>Elvis-Nicolae Arteni</td></tr>
   <tr><td>0.1.0</td><td>2026-09-30</td><td>Latency monitor, first version</td><td>Elvis-Nicolae Arteni</td></tr>
 </table></div>
