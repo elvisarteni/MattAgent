@@ -68,8 +68,12 @@ def perform_check(settings: Settings, workdir: Path, run: Runner = vero.run, now
 
 
 class Monitor:
-    def __init__(self, data_dir: Path, run: Runner = vero.run, scanner: Optional[sessions.Scanner] = None):
+    def __init__(
+        self, data_dir: Path, run: Runner = vero.run, scanner: Optional[sessions.Scanner] = None, server_mode: bool = False
+    ):
         self.data_dir = data_dir
+        self.server_mode = server_mode  # shared team server: no personal session panels
+        self.last_manual: float = 0.0
         self.run = run
         self.settings_path = data_dir / "settings.json"
         self.history_path = data_dir / "history.json"
@@ -169,7 +173,7 @@ class Monitor:
 
     def _scan_loop(self) -> None:
         while not self._stop.is_set():
-            if self.settings.track_sessions:
+            if self.settings.track_sessions and not self.server_mode:
                 self.scan_sessions()
             self._stop.wait(sessions.SCAN_EVERY_S)
 
@@ -187,7 +191,7 @@ class Monitor:
         return new
 
     # view ----------------------------------------------------------------------
-    def state(self) -> Dict[str, Any]:
+    def state(self, admin: bool = True) -> Dict[str, Any]:
         with self._lock:
             hist = list(self.history)
         day = [r for r in hist if r["time"] >= time.time() - 86400]
@@ -209,13 +213,14 @@ class Monitor:
             "availability_24h": round(sum(1 for r in day if r.get("available")) / len(day) * 100, 1) if day else None,
             "checks_24h": len(day),
             "history": hist[-48:],
+            "mode": "server" if self.server_mode else "local",
             "settings": {
-                "vero_path": self.settings.vero_path,
-                "vero_found": vero.find_vero(self.settings.vero_path),
+                "vero_path": self.settings.vero_path if admin else "",
+                "vero_found": vero.find_vero(self.settings.vero_path) if admin else None,
                 "check_model": self.settings.check_model,
                 "interval_minutes": self.settings.interval_minutes,
                 "timeout_seconds": self.settings.timeout_seconds,
-                "track_sessions": self.settings.track_sessions,
+                "track_sessions": self.settings.track_sessions and not self.server_mode,
             },
-            "sessions": self.scanner.result if self.settings.track_sessions else None,
+            "sessions": self.scanner.result if self.settings.track_sessions and not self.server_mode else None,
         }

@@ -62,6 +62,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .bars .p50 span{position:absolute;right:0;top:-17px;font-size:11px;color:var(--mut);background:var(--card);padding:0 3px}
 .tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;z-index:5}
 .check{display:flex;align-items:center;gap:8px}
+.badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mut);background:var(--card)}
+.act{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+.act th,.act td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.act th{font-size:12px;color:var(--mut);font-weight:600}
+.act td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.act .ok{color:var(--ok);font-weight:600} .act .bad{color:var(--bad);font-weight:600}
+.act .why{color:var(--mut)}
+.tw{overflow-x:auto}
 .check input{width:auto}
 .dots span{width:14px;height:14px;border-radius:4px;background:var(--idle)}
 .dots span.ok{background:var(--ok)} .dots span.bad{background:var(--bad)}
@@ -87,6 +95,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     <h1>Vero Status</h1><span class="ver" id="ver"></span>
     <span class="sp"></span>
     <button class="primary" id="checkBtn" type="button">Check now</button>
+    <span class="badge" id="modeBadge" hidden></span>
     <button id="setBtn" type="button" aria-expanded="false" aria-controls="settings">Settings</button>
     <button id="quitBtn" type="button">Quit</button>
   </header>
@@ -131,6 +140,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     </div>
     <div class="label" style="margin-top:16px">Last checks (oldest → newest)</div>
     <div class="dots" id="dots"></div>
+  </section>
+
+  <section class="card" id="actCard">
+    <div class="label">Recent activity</div>
+    <div class="tw"><table class="act" id="act"></table></div>
   </section>
 
   <section class="card" id="latCard">
@@ -236,15 +250,37 @@ function render(){
   tick();
   $("dots").innerHTML = s.history.map(r => `<span class="${r.available ? "ok" : "bad"}" title="${day(r.time)}: ${r.available ? "available" : "not available"}${r.seconds != null ? ", " + Math.round(r.seconds) + " s" : ""}"></span>`).join("")
     || '<span class="muted" style="width:auto;height:auto;background:none">none yet</span>';
-  $("checkBtn").disabled = s.checking; $("checkBtn").textContent = s.checking ? "Checking…" : "Check now";
+  const server = s.mode === "server", wait = s.check_wait_s || 0;
+  $("checkBtn").disabled = s.checking || wait > 0;
+  $("checkBtn").textContent = s.checking ? "Checking…" : wait > 0 ? `Check now (in ${Math.ceil(wait / 60)} min)` : "Check now";
+  $("checkBtn").title = wait > 0 ? "Someone checked recently. On the shared server, manual checks are limited to one every 5 minutes." : "";
+  $("quitBtn").hidden = server;
+  $("setBtn").hidden = server && !s.admin;
+  if (server && !s.admin) $("settings").classList.remove("open");
+  $("modeBadge").hidden = !server;
+  $("modeBadge").textContent = s.admin ? "Team server · admin" : "Team server";
+  renderActivity(s.history);
   $("found").textContent = s.settings.vero_found ? "Found: " + s.settings.vero_found : "Vero CLI not found automatically: enter its full path (in a terminal: where vero).";
-  $("foot").textContent = "Runs on this computer only (127.0.0.1). The check asks: \"Reply with exactly: OK\". No answers or secrets are stored.";
+  $("foot").textContent = (server
+    ? `Shared status page for the team, no login. Vero is checked on the server every ${iv || "–"} min. `
+    : "Runs on this computer only (127.0.0.1). ")
+    + "The check asks: \"Reply with exactly: OK\". No answers or secrets are stored.";
   renderSessions(s);
   if (!settingsLoaded) {
     $("sTrack").checked = !!s.settings.track_sessions;
     $("sInterval").value = String(iv); $("sModel").value = s.settings.check_model;
     $("sTimeout").value = s.settings.timeout_seconds; $("sPath").value = s.settings.vero_path; settingsLoaded = true;
   }
+}
+const TRIG = {auto: "scheduled", manual: "Check now", start: "at start"};
+function renderActivity(hist){
+  const rows = (hist || []).slice(-10).reverse();
+  $("act").innerHTML = rows.length
+    ? "<thead><tr><th>Time</th><th>Result</th><th>Model</th><th class=\"n\">Answer time</th><th>Started by</th><th>Note</th></tr></thead><tbody>"
+      + rows.map(r => `<tr><td>${esc(day(r.time))}</td><td class="${r.available ? "ok" : "bad"}">${r.available ? "available" : "not available"}</td>`
+        + `<td>${esc(prettyModel(r.asked_model) || "–")}</td><td class="n">${r.available && r.seconds != null ? Math.round(r.seconds) + " s" : "–"}</td>`
+        + `<td>${esc(TRIG[r.trigger] || r.trigger || "")}</td><td class="why">${esc(r.reason || "")}</td></tr>`).join("") + "</tbody>"
+    : '<tbody><tr><td class="why">No checks yet.</td></tr></tbody>';
 }
 const secs = (v) => v == null ? "–" : (v < 10 ? v.toFixed(1) : Math.round(v)) + " s";
 function renderSessions(s){
@@ -298,9 +334,16 @@ function tick(){
   const s = Math.max(0, Math.round(n - Date.now()/1000));
   $("next").textContent = s < 60 ? `in ${s} s` : s < 3600 ? `in ${Math.ceil(s/60)} min` : "at " + clock(n);
 }
+let ADMIN = null;
+try {
+  const u = new URL(location.href), k = u.searchParams.get("admin");
+  if (k) { sessionStorage.setItem("vs.admin", k); u.searchParams.delete("admin"); history.replaceState(null, "", u.pathname + u.search); }
+  ADMIN = sessionStorage.getItem("vs.admin");
+} catch (e) {}
+const hdrs = (extra) => Object.assign(ADMIN ? {"X-Admin-Key": ADMIN} : {}, extra || {});
 async function load(){
   try {
-    const r = await fetch("/api/state", {cache: "no-store"});
+    const r = await fetch("/api/state", {cache: "no-store", headers: hdrs()});
     S = await r.json(); offline = false; render();
   } catch (e) {
     offline = true; $("hero").className = "card hero"; $("lamp").textContent = "!";
@@ -309,9 +352,14 @@ async function load(){
   clearTimeout(timer); timer = setTimeout(load, S && S.checking ? 1500 : 5000);
 }
 async function post(path, body){
-  return fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: body ? JSON.stringify(body) : undefined});
+  return fetch(path, {method: "POST", headers: hdrs({"Content-Type": "application/json"}), body: body ? JSON.stringify(body) : undefined});
 }
-$("checkBtn").addEventListener("click", async () => { $("checkBtn").disabled = true; await post("/api/check"); load(); });
+$("checkBtn").addEventListener("click", async () => {
+  $("checkBtn").disabled = true;
+  const r = await post("/api/check");
+  if (r.status === 429) { const d = await r.json().catch(() => ({})); alert(d.error || "Checked recently, try again later."); }
+  load();
+});
 $("setBtn").addEventListener("click", () => { const p = $("settings"), open = !p.classList.contains("open");
   p.classList.toggle("open", open); $("setBtn").setAttribute("aria-expanded", open); if (open) p.scrollIntoView({behavior: "smooth"}); });
 $("saveBtn").addEventListener("click", async () => {

@@ -24,7 +24,7 @@ figcaption{font-size:12.5px;color:var(--mut)}
 .note{border-left:4px solid var(--brand);background:var(--soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:13.5px}
 .ok{color:var(--ok);font-weight:600} .bad{color:var(--bad);font-weight:600}
 </style></head><body><main>
-<div class="kicker">Quality AI Automation · Jira ASPF-1578 · version 4.1.0</div>
+<div class="kicker">Quality AI Automation · Jira ASPF-1578 · version 4.2.0</div>
 <h1>Vero Status: user guide</h1>
 <p class="lead">A small program: double-click it and a dashboard opens in your browser, showing whether Vero is available and which model it uses.</p>
 
@@ -78,6 +78,21 @@ figcaption{font-size:12.5px;color:var(--mut)}
 </table>
 <div class="note">Each check asks Vero one tiny question: <code>Reply with exactly: OK</code>. It costs two small model calls and takes about a minute, because Vero starts a full agent each time. The check never auto-approves actions (no <code>--yolo</code>) and runs in an empty folder. Nothing Vero answers and no secret is stored.</div>
 
+<h2>Team server: one page for everyone, no login</h2>
+<p>Instead of every colleague running Vero Status, run it once on a server or an always-on PC and share one link. Viewers need nothing installed and do not log in or register.</p>
+<ol class="steps">
+  <li>On the server, sign in to Vero with the functional account (<code>vero auth</code>), then run <code>python vero_status_server.py</code> in the folder. Optional: <code>--port 8080</code>.</li>
+  <li>It prints a <b>share link</b> (<code>http://&lt;server&gt;:8767/</code>) and an <b>admin link</b> (<code>…/?admin=&lt;key&gt;</code>). Both are also in <code>data\vero-status.log</code>.</li>
+  <li>Allow the port once in an administrator PowerShell: <code>New-NetFirewallRule -DisplayName "Vero Status" -Direction Inbound -LocalPort 8767 -Protocol TCP -Action Allow</code></li>
+  <li>To start it with the machine: Task Scheduler › Create Task › <i>Run whether user is logged on or not</i>, trigger <i>At startup</i>, program <code>pythonw.exe</code>, argument <code>vero_status_server.py</code>, <i>Start in</i> the folder, as the functional account.</li>
+</ol>
+<table>
+  <tr><th>Who</th><th>Sees and can do</th></tr>
+  <tr><td>Anyone with the share link</td><td>Availability, Vero's model, the model of the last check, 24 h availability, the last checks and <b>Recent activity</b> (time, result, model, answer time, who started it). <b>Check now</b> at most once every 5 minutes for everyone together.</td></tr>
+  <tr><td>Admin link</td><td>The same, plus <b>Settings</b> and Check now without waiting. The key is removed from the address bar after opening. Keep the link private; delete <code>data\admin_key.txt</code> and restart to change it.</td></tr>
+</table>
+<div class="note">The server page has no Quit button and does not show <i>Vero open now</i> or <i>your sessions</i>; those are about your own laptop, so keep using <b>Vero Status.pyw</b> locally for them. Plain HTTP is fine on the intranet; put IIS in front for HTTPS. Record the server, functional account and link in the SCMP.</div>
+
 <h2>Try it without Vero</h2>
 <p>In <b>Settings › Vero CLI location</b>, enter <code>C:\Tools\vero-status\scripts\vero.cmd</code> and save, then click <b>Check now</b>. A built-in fake Vero answers like the real one. Clear the field afterwards.</p>
 
@@ -96,5 +111,5 @@ figcaption{font-size:12.5px;color:var(--mut)}
 <p>Details are in <code>data\vero-status.log</code>. To remove the program, click <b>Quit</b>, then delete the folder (and the shortcuts, if you made any). Earlier versions (Vero Latency Monitor, Vero Availability Monitor) keep calling Vero until you run <code>uninstall.bat</code> in their folders.</p>
 
 <h2>Rebuild from the PDF</h2>
-<p>If you received <code>Vero_Status_4.0.0_Source.pdf</code> instead of the folder, give it to Vero CLI or another AI assistant with: <i>"Follow the instructions on page 1 of this PDF and rebuild the project in C:\Tools."</i> The PDF contains every file with numbered lines and a verify script that confirms each file is exact. Then continue with <i>Start it</i>.</p>
+<p>If you received <code>Vero_Status_4.2.0_Source.pdf</code> instead of the folder, give it to Vero CLI or another AI assistant with: <i>"Follow the instructions on page 1 of this PDF and rebuild the project in C:\Tools."</i> The PDF contains every file with numbered lines and a verify script that confirms each file is exact. Then continue with <i>Start it</i>.</p>
 </main></body></html>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.2.0
+- **Team server**: `python vero_status_server.py` serves one shared page on the network. No login or registration:
+  anyone with the link sees availability, models, 24 h availability and the new **Recent activity** table.
+- Viewers can trigger **Check now** at most once every 5 minutes; settings need the admin link
+  (`?admin=<key>`, key in `data/admin_key.txt`, compared in constant time, removed from the address bar).
+- On the server there is no Quit, the personal panels are off, and the Vero path is hidden from viewers.
+  Cross-site POSTs are still rejected.
+- New **Recent activity** panel (also locally): last 10 checks with result, model, answer time and trigger.
+
 ## 4.1.0
 - New panel **Vero open now**: when a Vero CLI is running, or a Vero CLI / VS Code session was active in the last
   10 minutes, it shows the model in use right now (idle CLI: Vero's configured model). "Waiting for the model for N s"

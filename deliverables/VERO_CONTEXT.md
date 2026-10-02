@@ -1,4 +1,4 @@
-# VERO_CONTEXT: Vero Status 4.1.0
+# VERO_CONTEXT: Vero Status 4.2.0
 
 > **For the AI reading this:** this file describes the whole program. Read a file before changing it, and keep the rules at the end.
 
@@ -11,7 +11,14 @@ A small program for one laptop. When you double-click `Vero Status.pyw`, it open
 - the Vero version, the response time, availability over 24 h, and the last 48 checks;
 - **Vero open now**: the model in use in your own open Vero CLI or VS Code session;
 - **Your Vero sessions: response time**: median and p95 per hour, the 24 h median, and the last 40 requests;
+- **Recent activity**: the last 10 checks (time, result, model, answer time, trigger);
 - buttons for Check now, Settings and Quit.
+
+**Team server** (4.2): `python vero_status_server.py [--port N] [--host H]` serves the same page on the network for
+everyone, with no login. Viewers see status, models, history and Recent activity; their Check now is limited to once per
+5 minutes (`server.COOLDOWN_S`). Settings need the admin key (`?admin=<key>` in the URL, sent as the `X-Admin-Key` header,
+stored in `data/admin_key.txt`, compared with `hmac.compare_digest`). No Quit endpoint, no personal session panels,
+and the Vero path is hidden from viewers.
 
 It uses only the Python 3.8+ standard library. It opens no console window (`pythonw`), and every child process starts with `CREATE_NO_WINDOW`.
 
@@ -21,8 +28,9 @@ The Jira story is ASPF-1578, for the Quality AI Automation team at NXP. Version 
 
 ```
 Vero Status.pyw          double-click entry: adds the folder to sys.path, calls vero_status.app.run()
+vero_status_server.py    team server entry: calls vero_status.app.serve_team() (admin key, binds 0.0.0.0)
 vero_status/
-  __init__.py            __version__ = "4.0.0", APP_ID = "vero-status"
+  __init__.py            __version__ = "4.2.0", APP_ID = "vero-status"
   app.py                 single instance (GET /api/health), logging to data/vero-status.log, opens the browser,
                          shows a Windows message box on errors (no console)
   vero.py                find_vero, run (no window, kills the process tree on timeout), and pure parsers:
@@ -34,8 +42,9 @@ vero_status/
   monitor.py             perform_check(settings, workdir, run) -> record; Monitor: timer thread, check_now,
                          history (data/history.json, last 500), update_settings, state() for the page
   settings.py            Settings (frozen dataclass), validation, load/save of data/settings.json
-  server.py              127.0.0.1 only. GET / , /api/state, /api/health; POST /api/check, /api/settings, /api/quit.
-                         Host and Origin are checked.
+  server.py              GET / , /api/state, /api/health; POST /api/check, /api/settings, /api/quit (local only).
+                         Local: 127.0.0.1, Host and Origin checked. Server mode: any Host, POST Origin checked,
+                         settings need the admin key, viewer Check now cooldown (429).
   web/index.html         the dashboard (one file, vanilla JS, light and dark, polls /api/state)
 scripts/fake_vero.py     stand-in Vero: version, config, task --json (FAKE_VERO_MODE ok|down|auth|hang|nocompletion|refuse)
 scripts/fake_session.py  writes a realistic session log into a folder (demo and tests; never your real ~/.vero)
@@ -72,7 +81,7 @@ A broken settings file falls back to the defaults.
 ## Quality gates
 
 ```
-python -m unittest discover -s tests -t .      (43 tests, Python 3.8–3.13)
+python -m unittest discover -s tests -t .      (49 tests, Python 3.8–3.13)
 uvx ruff check . && uvx ruff format --check .
 uvx mypy && uvx mypy --platform win32          (strict)
 ```
@@ -85,6 +94,7 @@ uvx mypy && uvx mypy --platform win32          (strict)
 4. Store no answers, no secrets and no `api_req_started` content. Mask credentials in error text.
    From the user's task logs, read only `ts`, event kinds, `modelInfo` and token counts. Only read those files, never change them.
    Exclude our own probe tasks, by task id and by prompt.
-5. Bind to 127.0.0.1 only, and keep the Host and Origin checks on every request.
+5. Local mode binds to 127.0.0.1 with Host and Origin checks. Server mode is opt-in (`vero_status_server.py`): keep the
+   Origin check on POSTs, the admin key for settings, the viewer cooldown, and never expose paths or personal sessions.
 6. Tests use the fake Vero only.
 7. Commit messages and PR titles have the form `ASPF-1578: <summary>`. Update the CHANGELOG and this file when behaviour changes.

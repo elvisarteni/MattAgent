@@ -208,3 +208,83 @@ class ServerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ServerModeTest(unittest.TestCase):
+    KEY = "test-admin-key-0123456789"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = mock.patch.dict(os.environ, {"FAKE_VERO_DELAY": "0.05", "FAKE_VERO_MODE": "ok"})
+        self.env.start()
+        self.port = free_port()
+        self.mon = Monitor(Path(self.tmp.name), fake_run, quiet_scanner(), server_mode=True)
+        self.mon.settings = fake_settings()
+        self.srv = create(self.mon, self.port, server_mode=True, admin_key=self.KEY, host="127.0.0.1")
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.base = f"http://127.0.0.1:{self.port}"
+
+    def tearDown(self):
+        self.env.stop()
+        self.srv.shutdown()
+        self.srv.server_close()
+        self.tmp.cleanup()
+
+    def req(self, path, data=None, post=False, **headers):
+        body = json.dumps(data).encode() if data is not None else (b"" if post else None)
+        r = urllib.request.Request(self.base + path, data=body, headers={"Content-Type": "application/json", **headers})
+        try:
+            with urllib.request.urlopen(r) as resp:
+                return resp.status, json.loads(resp.read() or b"null")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"null")
+
+    def wait_idle(self):
+        for _ in range(100):
+            if not self.mon.checking:
+                return
+            time.sleep(0.05)
+
+    def test_anyone_can_read_without_login_any_host_name(self):
+        code, st = self.req("/api/state", Host=f"vero-status.example.nxp.com:{self.port}")
+        self.assertEqual(code, 200)
+        self.assertEqual((st["mode"], st["admin"]), ("server", False))
+        self.assertEqual((st["settings"]["vero_path"], st["settings"]["vero_found"]), ("", None))  # server paths hidden
+        self.assertIsNone(st["sessions"])  # no personal panels on a shared server
+        self.assertFalse(st["settings"]["track_sessions"])
+
+    def test_admin_key_unlocks_settings(self):
+        self.assertEqual(self.req("/api/settings", {"interval_minutes": 30})[0], 403)
+        self.assertEqual(self.req("/api/settings", {"interval_minutes": 30}, **{"X-Admin-Key": "wrong"})[0], 403)
+        self.assertEqual(self.req("/api/settings", {"interval_minutes": 30}, **{"X-Admin-Key": self.KEY})[0], 200)
+        self.assertEqual(self.mon.settings.interval_minutes, 30)
+        _, st = self.req("/api/state", **{"X-Admin-Key": self.KEY})
+        self.assertTrue(st["admin"])
+        self.assertTrue(st["settings"]["vero_found"])
+
+    def test_no_quit_on_the_server(self):
+        self.assertEqual(self.req("/api/quit", post=True)[0], 404)
+        self.assertEqual(self.req("/api/quit", post=True, **{"X-Admin-Key": self.KEY})[0], 404)
+        self.assertEqual(self.req("/api/health")[0], 200)
+
+    def test_check_now_is_rate_limited_for_viewers_not_admin(self):
+        self.assertEqual(self.req("/api/check", post=True)[0], 202)
+        self.wait_idle()
+        code, body = self.req("/api/check", post=True)
+        self.assertEqual(code, 429)
+        self.assertIn("try again", body["error"])
+        self.assertGreater(self.req("/api/state")[1]["check_wait_s"], 0)
+        self.assertEqual(self.req("/api/check", post=True, **{"X-Admin-Key": self.KEY})[0], 202)
+
+    def test_cross_site_post_still_blocked(self):
+        self.assertEqual(self.req("/api/check", post=True, Origin="http://evil.example")[0], 403)
+
+
+class AdminKeyTest(unittest.TestCase):
+    def test_created_once_and_reused(self):
+        from vero_status.app import admin_key
+
+        with tempfile.TemporaryDirectory() as d:
+            k1 = admin_key(Path(d))
+            self.assertGreaterEqual(len(k1), 24)
+            self.assertEqual(admin_key(Path(d)), k1)

@@ -11,7 +11,7 @@ Double-click **Vero Status** and a dashboard opens in your browser showing:
 
 Buttons: **Check now**, **Settings** (how often to check, which model to use for the check, Vero location), **Quit**.
 
-Jira ASPF-1578 · Version 4.1.0 · Python 3.8+ standard library only, no install, no command window.
+Jira ASPF-1578 · Version 4.2.0 · Python 3.8+ standard library only, no install, no command window.
 
 ## Use it
 
@@ -21,6 +21,40 @@ Jira ASPF-1578 · Version 4.1.0 · Python 3.8+ standard library only, no install
    To start it with Windows, put that shortcut in the folder that opens with `Win+R` -> `shell:startup`.
 
 Double-clicking again while it runs just opens the dashboard. **Quit** stops it.
+
+## Team server (one page for everyone, no login)
+
+Run it once on a server (or any always-on PC) and share one link. Everyone opens it in the browser, no login,
+no registration, nothing to install on their laptops. One check serves the whole team.
+
+```
+python vero_status_server.py                 # port 8767, all network interfaces
+python vero_status_server.py --port 8080     # another port
+```
+
+It prints (and writes to `data/vero-status.log`):
+
+- **Share link** `http://<server>:8767/`: anyone can see whether Vero is available, its model, 24 h availability,
+  and **Recent activity** (the last 10 checks: time, result, model, answer time, who started it).
+  Viewers can press **Check now** at most once every 5 minutes (shared for everyone).
+- **Admin link** `http://<server>:8767/?admin=<key>`: also shows **Settings**. Keep it private. The key is in
+  `data/admin_key.txt`; delete that file and restart to get a new one. The key is removed from the address bar after opening.
+
+There is no Quit button and the personal panels (*Vero open now*, *your sessions*) are off: they only make sense on
+your own laptop, so keep using `Vero Status.pyw` locally for those.
+
+**Windows server, start with the machine:** Task Scheduler > Create Task > *Run whether user is logged on or not*,
+trigger *At startup*, action `pythonw.exe` with arguments `vero_status_server.py` and *Start in* the folder.
+Run it as the functional account that is signed in to Vero (`vero auth`). Open the port once (admin PowerShell):
+
+```
+New-NetFirewallRule -DisplayName "Vero Status" -Direction Inbound -LocalPort 8767 -Protocol TCP -Action Allow
+```
+
+**Linux:** a systemd service with `ExecStart=/usr/bin/python3 /opt/vero-status/vero_status_server.py` and `Restart=always`.
+
+Plain HTTP is fine on the intranet (the page holds no secrets); put IIS or nginx in front for HTTPS.
+Record the host, the functional account and the link in the SCMP (`servers.md`, `functional-accounts.md`, `publishing.md`).
 
 ## How a check works
 
@@ -49,7 +83,7 @@ In Settings, set *Vero CLI location* to `scripts\vero.cmd` (Windows) or `scripts
 ## Develop
 
 ```
-python -m unittest discover -s tests -t .      # 43 tests, fake Vero only
+python -m unittest discover -s tests -t .      # 49 tests, fake Vero only
 uvx ruff check . && uvx ruff format --check .  # lint + format
 uvx mypy && uvx mypy --platform win32          # strict typing
 uv run --no-project --with reportlab python scripts/build_source_pdf.py   # source as PDF for rebuild
