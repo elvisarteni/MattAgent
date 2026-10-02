@@ -23,6 +23,7 @@ class SettingsTest(unittest.TestCase):
             {"check_model": "two words"},
             {"evil": 1},
             {"vero_path": 3},
+            {"track_sessions": "yes"},
         ):
             with self.assertRaises(SettingsError, msg=bad):
                 Settings().merged(bad)

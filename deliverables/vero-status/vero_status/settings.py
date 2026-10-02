@@ -22,6 +22,7 @@ class Settings:
     interval_minutes: int = 15
     timeout_seconds: int = 120
     port: int = 8767
+    track_sessions: bool = True  # read your own Vero sessions (CLI, VS Code) for latency and the model in use
 
     def merged(self, changes: Dict[str, Any]) -> Settings:
         """A validated copy with the given changes (unknown keys are rejected)."""
@@ -42,6 +43,8 @@ class Settings:
             raise SettingsError(f"interval must be one of {INTERVALS} minutes")
         if not isinstance(self.timeout_seconds, int) or not 30 <= self.timeout_seconds <= 600:
             raise SettingsError("timeout must be between 30 and 600 seconds")
+        if not isinstance(self.track_sessions, bool):
+            raise SettingsError("track_sessions must be true or false")
         if not isinstance(self.port, int) or not 1024 <= self.port <= 65535:
             raise SettingsError("port must be between 1024 and 65535")
 

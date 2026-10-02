@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.1.0
+- New panel **Vero open now**: when a Vero CLI is running, or a Vero CLI / VS Code session was active in the last
+  10 minutes, it shows the model in use right now (idle CLI: Vero's configured model). "Waiting for the model for N s"
+  while a request runs.
+- New panel **Your Vero sessions: response time**: for every model request in your own sessions (CLI and VS Code),
+  the time until the model started answering, read from Vero's own task logs (`ui_messages.json`). Median and p95 for
+  the last hour, median for 24 h, and the last 40 requests as bars with details on hover.
+- Privacy: only timestamps, event kinds, model names and token counts are read; prompts and answers never. Files are
+  only read. The dashboard's own test questions are excluded (by task id and prompt). Setting to switch it off.
+- Process detection is structural (vero / vero.cmd / node running a `vero` package), so Vero Status itself, admin
+  commands (`vero version`, `config`, …) and its own checks are never mistaken for an open session.
+
 ## 4.0.0
 Rewritten as a simple program with a dashboard (feedback on 3.0: too many command windows and steps).
 - Double-click `Vero Status.pyw`: no console, no setup, no Task Scheduler. A second double-click just opens the dashboard.

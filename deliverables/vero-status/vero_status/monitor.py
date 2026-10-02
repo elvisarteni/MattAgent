@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from . import vero
+from . import sessions, vero
 from .settings import Settings, load, save
 
 log = logging.getLogger("vero_status")
@@ -46,6 +46,7 @@ def perform_check(settings: Settings, workdir: Path, run: Runner = vero.run, now
     task = run(vero.task_args(exe, settings.check_model, limit, workdir), limit + 30, str(workdir))
     stream = vero.parse_task_stream(task.out.splitlines())
     rec["asked_model"], rec["provider"] = stream.model, stream.provider  # model Vero used for the check
+    rec["task_id"] = stream.task_id  # lets the session tracker ignore our own test tasks
     if task.timed_out:
         rec["reason"] = f"no answer within {limit + 30} s"
     elif stream.answer is not None:
@@ -67,7 +68,7 @@ def perform_check(settings: Settings, workdir: Path, run: Runner = vero.run, now
 
 
 class Monitor:
-    def __init__(self, data_dir: Path, run: Runner = vero.run):
+    def __init__(self, data_dir: Path, run: Runner = vero.run, scanner: Optional[sessions.Scanner] = None):
         self.data_dir = data_dir
         self.run = run
         self.settings_path = data_dir / "settings.json"
@@ -79,6 +80,7 @@ class Monitor:
         self._lock = threading.Lock()
         self._wake = threading.Event()
         self._stop = threading.Event()
+        self.scanner = scanner or sessions.Scanner(ignore_processes=[str(data_dir / "sandbox"), "vero_status", "vero-status"])
 
     # history ---------------------------------------------------------------
     def _load_history(self) -> List[Dict[str, Any]]:
@@ -147,10 +149,29 @@ class Monitor:
                         self._plan_next()
 
         threading.Thread(target=loop, daemon=True).start()
+        threading.Thread(target=self._scan_loop, daemon=True).start()
         if check_at_start:
             self.check_now("start")
         else:
             self._plan_next()
+
+    def own_task_ids(self) -> List[str]:
+        with self._lock:
+            return [str(r["task_id"]) for r in self.history if r.get("task_id")]
+
+    def scan_sessions(self) -> Dict[str, Any]:
+        """Your own Vero sessions; never raises (a bad file must not break the dashboard)."""
+        try:
+            return self.scanner.state(self.own_task_ids(), force=True)
+        except Exception:
+            log.exception("session scan failed")
+            return {}
+
+    def _scan_loop(self) -> None:
+        while not self._stop.is_set():
+            if self.settings.track_sessions:
+                self.scan_sessions()
+            self._stop.wait(sessions.SCAN_EVERY_S)
 
     def stop(self) -> None:
         self._stop.set()
@@ -194,5 +215,7 @@ class Monitor:
                 "check_model": self.settings.check_model,
                 "interval_minutes": self.settings.interval_minutes,
                 "timeout_seconds": self.settings.timeout_seconds,
+                "track_sessions": self.settings.track_sessions,
             },
+            "sessions": self.scanner.result if self.settings.track_sessions else None,
         }

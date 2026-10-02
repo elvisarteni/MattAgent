@@ -16,6 +16,13 @@ def fake_run(args, timeout_s, cwd=None):
     return vero.run([sys.executable, str(FAKE), *args[1:]], timeout_s, cwd)
 
 
+def quiet_scanner():
+    """A session scanner that looks nowhere (tests must not read the real ~/.vero)."""
+    from vero_status.sessions import Scanner
+
+    return Scanner(roots=[], list_processes=lambda: [])
+
+
 def fake_settings(**over):
     from vero_status.settings import Settings
 

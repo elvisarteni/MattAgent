@@ -164,10 +164,11 @@ class TaskStream:
     model: Optional[str]
     error: Optional[str]
     events: int
+    task_id: Optional[str] = None
 
 
 def parse_task_stream(lines: Iterable[str]) -> TaskStream:
-    answer = provider = model = error = None
+    answer = provider = model = error = task_id = None
     events = 0
     for raw in lines:
         raw = raw.strip()
@@ -180,6 +181,8 @@ def parse_task_stream(lines: Iterable[str]) -> TaskStream:
         if not isinstance(ev, dict):
             continue
         events += 1
+        if ev.get("type") == "task_started" and ev.get("taskId") is not None:
+            task_id = str(ev["taskId"])
         info = ev.get("modelInfo")
         if isinstance(info, dict):
             provider = info.get("providerId") or provider
@@ -190,7 +193,7 @@ def parse_task_stream(lines: Iterable[str]) -> TaskStream:
             answer = str(ev.get("text") or "")
         elif ev.get("say") in ("error", "api_req_failed") or ev.get("type") == "error":
             error = clean(str(ev.get("text") or ev.get("message") or "error"))
-    return TaskStream(answer, provider, model, error, events)
+    return TaskStream(answer, provider, model, error, events, task_id)
 
 
 def task_args(exe: str, model: str, timeout_s: int, workdir: Path, prompt: str = PROMPT) -> List[str]:

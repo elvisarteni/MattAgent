@@ -1,4 +1,4 @@
-# VERO_CONTEXT: Vero Status 4.0.0
+# VERO_CONTEXT: Vero Status 4.1.0
 
 > **For the AI reading this:** this file describes the whole program. Read a file before changing it, and keep the rules at the end.
 
@@ -9,6 +9,8 @@ A small program for one laptop. When you double-click `Vero Status.pyw`, it open
 - whether **Vero is available** (Vero CLI 2.3.x);
 - **which model Vero uses**: the configured model from `vero config`, and the model the last check used (`modelInfo` in the `--json` stream);
 - the Vero version, the response time, availability over 24 h, and the last 48 checks;
+- **Vero open now**: the model in use in your own open Vero CLI or VS Code session;
+- **Your Vero sessions: response time**: median and p95 per hour, the 24 h median, and the last 40 requests;
 - buttons for Check now, Settings and Quit.
 
 It uses only the Python 3.8+ standard library. It opens no console window (`pythonw`), and every child process starts with `CREATE_NO_WINDOW`.
@@ -25,6 +27,10 @@ vero_status/
                          shows a Windows message box on errors (no console)
   vero.py                find_vero, run (no window, kills the process tree on timeout), and pure parsers:
                          parse_version, parse_config, parse_task_stream, task_args, clean (masks credentials)
+  sessions.py            your own Vero sessions: parse_ui_messages (pure: request latency = first event after
+                         api_req_started; model from modelInfo), Scanner (finds tasks/*/ui_messages.json for CLI
+                         and VS Code, cached by mtime, every 15 s), is_interactive_vero / process_command_lines
+                         (a vero / vero.cmd / node-with-vero-package process = an open CLI), summarize
   monitor.py             perform_check(settings, workdir, run) -> record; Monitor: timer thread, check_now,
                          history (data/history.json, last 500), update_settings, state() for the page
   settings.py            Settings (frozen dataclass), validation, load/save of data/settings.json
@@ -32,6 +38,7 @@ vero_status/
                          Host and Origin are checked.
   web/index.html         the dashboard (one file, vanilla JS, light and dark, polls /api/state)
 scripts/fake_vero.py     stand-in Vero: version, config, task --json (FAKE_VERO_MODE ok|down|auth|hang|nocompletion|refuse)
+scripts/fake_session.py  writes a realistic session log into a folder (demo and tests; never your real ~/.vero)
 scripts/vero, vero.cmd   launch the fake Vero (point "Vero CLI location" at one of these for a demo)
 scripts/build_source_pdf.py   writes the source as a PDF for rebuilding (developer tool, needs reportlab)
 tests/                   unittest; never calls the real Vero
@@ -58,13 +65,14 @@ Stored in `data/settings.json` and editable on the page:
 | `interval_minutes` | 15 | 0 (off), 5, 15, 30, 60 |
 | `timeout_seconds` | 120 | 30–600 |
 | `port` | 8767 | 1024–65535; change it in the file only |
+| `track_sessions` | true | show your own sessions' model and response time |
 
 A broken settings file falls back to the defaults.
 
 ## Quality gates
 
 ```
-python -m unittest discover -s tests -t .      (30 tests, Python 3.8–3.13)
+python -m unittest discover -s tests -t .      (43 tests, Python 3.8–3.13)
 uvx ruff check . && uvx ruff format --check .
 uvx mypy && uvx mypy --platform win32          (strict)
 ```
@@ -75,6 +83,8 @@ uvx mypy && uvx mypy --platform win32          (strict)
 2. Standard library only. No CDN and no external scripts in the page.
 3. Never pass `--yolo`. Run the task in the empty `data/sandbox` folder. On timeout, kill the whole process tree.
 4. Store no answers, no secrets and no `api_req_started` content. Mask credentials in error text.
+   From the user's task logs, read only `ts`, event kinds, `modelInfo` and token counts. Only read those files, never change them.
+   Exclude our own probe tasks, by task id and by prompt.
 5. Bind to 127.0.0.1 only, and keep the Host and Origin checks on every request.
 6. Tests use the fake Vero only.
 7. Commit messages and PR titles have the form `ASPF-1578: <summary>`. Update the CHANGELOG and this file when behaviour changes.

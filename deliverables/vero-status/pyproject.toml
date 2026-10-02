@@ -1,6 +1,6 @@
 [project]
 name = "vero-status"
-version = "4.0.0"
+version = "4.1.0"
 description = "Dashboard: is Vero available, and which model does it use? (ASPF-1578)"
 requires-python = ">=3.8"
 dependencies = []
@@ -15,6 +15,7 @@ ignore = ["S603", "S607", "S310", "UP006", "UP007", "UP035", "UP045", "RUF001", 
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S108"]
+"scripts/**" = ["S311"]  # demo randomness, not security
 
 [tool.mypy]
 python_version = "3.9"

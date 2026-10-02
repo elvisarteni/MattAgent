@@ -47,6 +47,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .facts .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.live{display:flex;align-items:center;gap:12px;padding:12px 18px}
+.live .dot{width:12px;height:12px;border-radius:50%;background:var(--idle);flex:none}
+.live.on .dot{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+.live .what{font-weight:600}
+.live .mdl{margin-left:auto;text-align:right}
+.live .mdl b{font-size:17px}
+.live .mdl .id{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.bars{display:flex;align-items:flex-end;gap:2px;height:96px;margin-top:6px;border-bottom:1px solid var(--line);position:relative}
+.bars .b{flex:1;max-width:22px;min-height:2px;background:var(--brand);border-radius:4px 4px 0 0;position:relative;cursor:default}
+.bars .b.fail{background:var(--bad)}
+.bars .b:hover,.bars .b:focus{outline:2px solid var(--ink);outline-offset:1px}
+.bars .p50{position:absolute;left:0;right:0;border-top:1px dashed var(--mut);pointer-events:none}
+.bars .p50 span{position:absolute;right:0;top:-17px;font-size:11px;color:var(--mut);background:var(--card);padding:0 3px}
+.tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;z-index:5}
+.check{display:flex;align-items:center;gap:8px}
+.check input{width:auto}
 .dots span{width:14px;height:14px;border-radius:4px;background:var(--idle)}
 .dots span.ok{background:var(--ok)} .dots span.bad{background:var(--bad)}
 .muted{color:var(--mut);font-size:13px}
@@ -61,7 +77,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .overlay{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;text-align:center;padding:20px}
 .overlay.show{display:flex}
 .overlay h2{margin:0 0 8px}
-@media (max-width:640px){.model,.facts{grid-template-columns:1fr}.form{grid-template-columns:1fr}.form .hint{grid-column:1}
+@media (max-width:640px){.live{flex-wrap:wrap}.live .mdl{margin-left:24px;text-align:left;width:100%}.model,.facts{grid-template-columns:1fr}.form{grid-template-columns:1fr}.form .hint{grid-column:1}
   .hero{flex-direction:column;align-items:flex-start}.hero h2{font-size:23px}}
 </style>
 </head>
@@ -82,6 +98,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <div class="meta" id="meta"></div>
       <div class="why" id="why"></div>
     </div>
+  </section>
+
+  <section class="card live" id="live" aria-live="polite">
+    <span class="dot"></span>
+    <div><div class="what" id="liveWhat">Looking for an open Vero…</div><div class="muted" id="liveSub"></div></div>
+    <div class="mdl" id="liveModel"></div>
   </section>
 
   <section class="card">
@@ -111,6 +133,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     <div class="dots" id="dots"></div>
   </section>
 
+  <section class="card" id="latCard">
+    <div class="label">Your Vero sessions (CLI and VS Code): response time</div>
+    <div class="facts">
+      <div><div class="label">Median, last hour</div><div class="v" id="latP50">–</div><div class="muted" id="latN"></div></div>
+      <div><div class="label">Slowest 5 %, last hour</div><div class="v" id="latP95">–</div><div class="muted">p95</div></div>
+      <div><div class="label">Last 24 h</div><div class="v" id="latDay">–</div><div class="muted" id="latDayN"></div></div>
+    </div>
+    <div class="label" style="margin-top:14px">Last model requests (oldest → newest), seconds until the model started answering</div>
+    <div class="bars" id="latBars" role="img" aria-label="Response time of your last Vero model requests"></div>
+    <div class="muted" id="latNote" style="margin-top:8px"></div>
+  </section>
+
   <section class="card settings" id="settings" aria-label="Settings">
     <div class="label">Settings</div>
     <div class="form">
@@ -131,6 +165,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <label for="sPath">Vero CLI location</label>
       <input id="sPath" spellcheck="false" placeholder="empty = find it automatically">
       <div class="hint" id="found"></div>
+      <label for="sTrack">My own Vero sessions</label>
+      <label class="check"><input id="sTrack" type="checkbox"> Show the model and response time of Vero CLI / VS Code sessions</label>
+      <div class="hint">Reads only timestamps and model names from Vero's own task logs. Your prompts and answers are never read.</div>
     </div>
     <div class="row"><button class="primary" id="saveBtn" type="button">Save</button><span class="msg" id="saveMsg"></span></div>
   </section>
@@ -138,6 +175,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <p class="muted" id="foot"></p>
 </div>
 
+<div class="tip" id="tip"></div>
 <div class="overlay" id="stopped"><div><h2>Vero Status is stopped</h2>
   <p class="muted">Double-click <b>Vero Status</b> to start it again. You can close this tab.</p></div></div>
 
@@ -201,11 +239,57 @@ function render(){
   $("checkBtn").disabled = s.checking; $("checkBtn").textContent = s.checking ? "Checking…" : "Check now";
   $("found").textContent = s.settings.vero_found ? "Found: " + s.settings.vero_found : "Vero CLI not found automatically: enter its full path (in a terminal: where vero).";
   $("foot").textContent = "Runs on this computer only (127.0.0.1). The check asks: \"Reply with exactly: OK\". No answers or secrets are stored.";
+  renderSessions(s);
   if (!settingsLoaded) {
+    $("sTrack").checked = !!s.settings.track_sessions;
     $("sInterval").value = String(iv); $("sModel").value = s.settings.check_model;
     $("sTimeout").value = s.settings.timeout_seconds; $("sPath").value = s.settings.vero_path; settingsLoaded = true;
   }
 }
+const secs = (v) => v == null ? "–" : (v < 10 ? v.toFixed(1) : Math.round(v)) + " s";
+function renderSessions(s){
+  const on = s.settings.track_sessions, x = s.sessions;
+  $("live").style.display = on ? "" : "none"; $("latCard").style.display = on ? "" : "none";
+  if (!on) return;
+  if (!x || !x.latency) { $("liveWhat").textContent = "Looking for an open Vero…"; return; }
+  const cur = x.current, cfg = s.configured || {};
+  const model = cur ? cur.model : (x.cli_process ? cfg.model : null);
+  $("live").className = "card live" + (x.open ? " on" : "");
+  $("liveWhat").textContent = !x.open ? "No Vero CLI or VS Code session open"
+    : cur ? `Vero ${cur.source === "VS Code" ? "in VS Code" : "CLI"} is open` : "Vero CLI is open";
+  $("liveSub").textContent = !x.open ? "The model appears here while you use Vero."
+    : cur && cur.waiting_since ? `waiting for the model for ${Math.round(Date.now()/1000 - cur.waiting_since)} s`
+    : cur ? `last activity ${ago(cur.last_activity)}` : "idle; showing Vero's configured model";
+  $("liveModel").innerHTML = x.open && model
+    ? `<div class="label" style="margin:0">Current model</div><b>${esc(prettyModel(model))}</b><div class="id">${esc(model)}</div>` : "";
+  const h = x.latency.hour, d = x.latency.day;
+  $("latP50").textContent = secs(h.p50); $("latP95").textContent = secs(h.p95);
+  $("latN").textContent = h.n ? `${h.n} request${h.n > 1 ? "s" : ""}` : "no requests";
+  $("latDay").textContent = secs(d.p50); $("latDayN").textContent = d.n ? `median of ${d.n} request${d.n > 1 ? "s" : ""}` : "no requests";
+  const rs = x.recent || [], max = Math.max(1, ...rs.map(r => r.s));
+  const p50 = h.p50 != null ? h.p50 : d.p50;
+  $("latBars").innerHTML = rs.length ? rs.map((r, i) =>
+      `<div class="b${r.failed ? " fail" : ""}" tabindex="0" data-i="${i}" style="height:${Math.max(2, r.s / max * 92)}px"></div>`).join("")
+    + (p50 != null ? `<div class="p50" style="bottom:${p50 / max * 92}px"><span>median ${secs(p50)}</span></div>` : "")
+    : '<span class="muted" style="align-self:center">No requests from your Vero sessions in the last 7 days.</span>';
+  $("latBars").dataset.rows = JSON.stringify(rs);
+  $("latNote").textContent = "Measured from Vero's own task logs: time from each model request to the first response. "
+    + "The tiny test questions of this dashboard are not included." + (x.tasks_seen ? "" : " Looked in: " + (x.searched || []).join(" · "));
+}
+const esc = (v) => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function showTip(e){
+  const b = e.target.closest(".b"); const tip = $("tip");
+  if (!b) { tip.style.display = "none"; return; }
+  const r = JSON.parse($("latBars").dataset.rows || "[]")[+b.dataset.i]; if (!r) return;
+  tip.innerHTML = `<b>${secs(r.s)}</b>${r.failed ? " · failed" : ""}<br>${esc(day(r.t))} · ${esc(r.source)}<br>${esc(prettyModel(r.model) || "")}`
+    + (r.tokens_in != null ? `<br>${r.tokens_in} tokens in · ${r.tokens_out != null ? r.tokens_out : "?"} out` : "");
+  tip.style.display = "block";
+  const rect = b.getBoundingClientRect();
+  tip.style.left = Math.min(rect.left, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (rect.top - tip.offsetHeight - 6) + "px";
+}
+["mouseover", "focusin"].forEach(ev => $("latBars").addEventListener(ev, showTip));
+["mouseleave", "focusout"].forEach(ev => $("latBars").addEventListener(ev, () => { $("tip").style.display = "none"; }));
+
 function tick(){
   if (!S) return;
   const n = S.next_check;
@@ -232,7 +316,8 @@ $("setBtn").addEventListener("click", () => { const p = $("settings"), open = !p
   p.classList.toggle("open", open); $("setBtn").setAttribute("aria-expanded", open); if (open) p.scrollIntoView({behavior: "smooth"}); });
 $("saveBtn").addEventListener("click", async () => {
   const body = {interval_minutes: +$("sInterval").value, check_model: $("sModel").value.trim(),
-                timeout_seconds: Math.round(+$("sTimeout").value), vero_path: $("sPath").value.trim().replace(/^"|"$/g, "")};
+                timeout_seconds: Math.round(+$("sTimeout").value), vero_path: $("sPath").value.trim().replace(/^"|"$/g, ""),
+                track_sessions: $("sTrack").checked};
   const r = await post("/api/settings", body), d = await r.json().catch(() => ({}));
   const m = $("saveMsg"); m.className = "msg " + (r.ok ? "ok" : "err"); m.textContent = r.ok ? "Saved." : (d.error || "Not saved.");
   if (r.ok) { settingsLoaded = false; load(); }

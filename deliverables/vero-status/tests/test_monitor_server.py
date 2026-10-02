@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 from unittest import mock
 
-from tests.helpers import fake_run, fake_settings
+from tests.helpers import fake_run, fake_settings, quiet_scanner
 from vero_status.monitor import Monitor, perform_check
 from vero_status.server import create
 
@@ -100,7 +100,7 @@ class MonitorTest(unittest.TestCase):
         self.fail("check did not finish")
 
     def make(self):
-        m = Monitor(self.dir, fake_run)
+        m = Monitor(self.dir, fake_run, quiet_scanner())
         m.settings = fake_settings()
         return m
 
@@ -114,7 +114,10 @@ class MonitorTest(unittest.TestCase):
         self.assertEqual((st["availability_24h"], st["checks_24h"]), (100.0, 1))
         self.assertEqual(st["configured"]["model"], "us.anthropic.claude-opus-5")
         self.assertIsNotNone(st["next_check"])
-        self.assertEqual(len(Monitor(self.dir, fake_run).history), 1)  # saved to disk
+        self.assertEqual(len(Monitor(self.dir, fake_run, quiet_scanner()).history), 1)  # saved to disk
+        m.scan_sessions()
+        self.assertEqual(m.state()["sessions"]["tasks_seen"], 0)
+        self.assertEqual(m.own_task_ids(), [st["last"]["task_id"]])  # our probe task is remembered
 
     def test_since_tracks_the_current_streak(self):
         m = self.make()
@@ -146,7 +149,7 @@ class ServerTest(unittest.TestCase):
         self.env = mock.patch.dict(os.environ, {"FAKE_VERO_DELAY": "0.05", "FAKE_VERO_MODE": "ok"})
         self.env.start()
         self.port = free_port()
-        self.mon = Monitor(Path(self.tmp.name), fake_run)
+        self.mon = Monitor(Path(self.tmp.name), fake_run, quiet_scanner())
         self.mon.settings = fake_settings()
         self.quit = threading.Event()
         self.srv = create(self.mon, self.port, self.quit.set)

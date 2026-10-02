@@ -187,7 +187,7 @@ INSTRUCTIONS FOR THE AI ASSISTANT (Vero CLI or other) - recreate the project fol
     folder, and run:  py verify_rebuild.py C:\\Tools\\vero-status
     It checks every file's SHA-256 and sets CRLF line endings where Windows needs them (.cmd, START_HERE.txt).
     Recreate any file reported MISSING or DIFFERENT, then run it again until it prints "OK: all files match".
- 6. Run the tests inside the folder:  py -m unittest discover -s tests -t .    Expected: OK (30 tests).
+ 6. Run the tests inside the folder:  py -m unittest discover -s tests -t .    Expected: OK (43 tests).
  7. Tell the user it is ready: double-click "Vero Status.pyw" to open the dashboard (see START_HERE.txt).
  Do not start the program or call the real Vero CLI unless the user asks.
 """
