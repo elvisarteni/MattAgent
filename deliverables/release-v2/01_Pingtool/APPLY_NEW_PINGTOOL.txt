@@ -1,0 +1,133 @@
+APPLY THE NEW PINGTOOL (Vero Status 4.3.0) ON THE VM
+====================================================
+
+What you get: Pingtool runs in the background on the VM, starts again with the VM,
+and you open it on your laptop through VS Code or an SSH tunnel. History and settings
+of the old Pingtool are kept.
+
+Time needed: about 10 minutes. No sudo needed.
+In the commands below, replace:
+  <user>     your VM user name
+  <vm-host>  the VM name, e.g. lsvm11u0000729.swis.ap-northeast-2.aws.nxp.com
+  <your-id>  your Windows user folder name
+
+Copy every command exactly; lines starting with # are explanations.
+
+
+STEP 1 - Copy the new version to the VM (on your laptop, in WSL)
+----------------------------------------------------------------
+Extract the release zip in Windows first (right-click > Extract All), then in WSL:
+
+  cd /mnt/c/Users/<your-id>/Downloads/Pingtool_v2_Release/01_Pingtool
+  ls -la | grep Vero_Status_4.3.0.zip
+  scp Vero_Status_4.3.0.zip <user>@<vm-host>:~/
+
+You should see: Vero_Status_4.3.0.zip 100%
+("No such file or directory" = wrong folder: check the cd path with ls.)
+
+
+STEP 2 - Log in to the VM
+-------------------------
+  ssh <user>@<vm-host>
+
+(Or a VS Code Remote-SSH window: Terminal > New Terminal.)
+All following steps run ON THE VM.
+
+
+STEP 3 - Find the old Pingtool and stop it
+------------------------------------------
+  ps -eo pid,args | grep -i "[v]ero.status"
+
+- No output: the old Pingtool is not running. Go to the next command.
+- Output like "12345 python3 /home/<user>/vero-status/Vero Status.pyw":
+  the folder before "/Vero Status.pyw" (or before "/vero_status_server.py")
+  is your OLD FOLDER. Write it down. Stop it:
+
+  pkill -f "Vero Status.pyw"; pkill -f "vero_status_server.py"
+
+If you do not know where the old folder is:
+
+  ls -d ~/vero-status ~/tools/vero-status ~/*/vero-status 2>/dev/null
+
+Check that nothing answers on the Pingtool port any more:
+
+  curl -s http://127.0.0.1:8767/api/health || echo "port free"
+
+You should see: port free
+
+
+STEP 4 - Keep the old version as a backup
+-----------------------------------------
+Only if you found an OLD FOLDER in step 3 (otherwise go to step 5).
+Put its path after OLD= (no spaces around =):
+
+  OLD=~/vero-status
+  BAK="$OLD.bak-$(date +%Y%m%d-%H%M)"
+  mv "$OLD" "$BAK" && echo "backup: $BAK"
+
+
+STEP 5 - Unpack the new version
+-------------------------------
+  mkdir -p ~/tools && cd ~/tools
+  python3 -m zipfile -e ~/Vero_Status_4.3.0.zip .
+  cd ~/tools/vero-status
+
+Only if you made a backup in step 4, take over the old history and settings:
+
+  [ -d "$BAK/data" ] && cp -a "$BAK/data" ~/tools/vero-status/ && echo "history and settings kept"
+
+(Old version 3.x or older, "Vero Availability Monitor" / "Vero Latency Monitor":
+ skip this copy, its data is not compatible.)
+
+
+STEP 6 - Install and start
+--------------------------
+  cd ~/tools/vero-status
+  bash scripts/install_vm.sh
+
+It ends with: Vero Status is running on this VM, port 8767.
+For the team server instead (others open it without login; the port must be
+open to the VM):  bash scripts/install_vm.sh team
+
+If it says it only runs while you are logged in, ask the VM admin once for:
+  sudo loginctl enable-linger <user>
+
+
+STEP 7 - Check
+--------------
+  curl -s http://127.0.0.1:8767/api/health
+
+You should see: {"app": "vero-status", "version": "4.3.0"}
+
+Open it on your laptop:
+- VS Code (Remote-SSH): PORTS tab > Forward a Port > 8767, then open the local
+  address VS Code shows (it may be another port, e.g. 8768 - that is fine).
+- Or a laptop terminal:  ssh -N -L 9000:127.0.0.1:8767 <user>@<vm-host>
+  and open http://localhost:9000
+
+On the page: the version in the header is v4.3.0 and the footer shows the VM's name.
+The first check takes about a minute.
+
+
+STEP 8 - Clean up (after a few days, when all is fine)
+------------------------------------------------------
+  rm -rf "$BAK" ~/Vero_Status_4.3.0.zip
+
+(In a new terminal $BAK is empty: use the backup folder name printed in step 4.)
+
+
+GO BACK TO THE OLD VERSION (only if something is wrong)
+-------------------------------------------------------
+  bash ~/tools/vero-status/scripts/install_vm.sh uninstall
+  mv "$BAK" "$OLD"
+  then start the old version the way you started it before.
+
+
+DAILY USE
+---------
+  bash ~/tools/vero-status/scripts/install_vm.sh status      is it running?
+  bash ~/tools/vero-status/scripts/install_vm.sh             restart
+  tail -f ~/tools/vero-status/data/vero-status.log           log
+  bash ~/tools/vero-status/scripts/install_vm.sh uninstall   stop and remove the autostart
+
+Problems: see the Confluence page (02_Confluence) section 6, or Vero_Status_Guide.pdf.
