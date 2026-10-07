@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.3.0 (Linux VM)
+- `scripts/install_vm.sh`: runs Vero Status in the background on a Linux VM and starts it with the machine
+  (systemd user service, else crontab @reboot); `personal` (default) or `team`, plus `status` and `uninstall`. No sudo.
+  Copies PATH and proxy settings for the service into `data/service.env` (owner-only), never AWS keys.
+- Vero CLI found without PATH: nvm (newest node first), `~/.npm-global/bin`, `~/.local/bin`, `/usr/local/bin`.
+  The program's folder is put first on the child PATH so `#!/usr/bin/env node` finds nvm's node.
+- Headless: no browser is started without a desktop; the URL is printed and logged instead.
+- Port forwarding works: local mode accepts 127.0.0.1 / localhost on any port (VS Code may forward 8767 as 8768).
+  Before, a different forwarded port got 403.
+- Shared VM: `data/` is owner-only (0700, admin key 0600); only your own processes count as an open Vero CLI;
+  under systemd/cron the admin link goes to the private log only, not the system journal.
+- VS Code Remote-SSH session logs (`~/.vscode-server/data/User/globalStorage`) are read.
+- SIGTERM (systemd stop, kill) stops cleanly. The page footer shows the machine the checks run on.
+
 ## 4.2.0
 - **Team server**: `python vero_status_server.py` serves one shared page on the network. No login or registration:
   anyone with the link sees availability, models, 24 h availability and the new **Recent activity** table.

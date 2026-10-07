@@ -175,5 +175,11 @@ class ScannerTest(unittest.TestCase):
         self.assertEqual((st["open"], st["tasks_seen"], st["recent"]), (False, 0, []))
 
 
+class RootsTest(unittest.TestCase):
+    def test_vs_code_remote_ssh_on_a_linux_vm_is_searched(self):
+        patterns = [p for p, src in sessions.default_roots() if src == "VS Code"]
+        self.assertTrue(any(".vscode-server" in p for p in patterns), patterns)
+
+
 if __name__ == "__main__":
     unittest.main()

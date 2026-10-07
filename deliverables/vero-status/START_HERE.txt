@@ -1,4 +1,4 @@
-VERO STATUS 4.2  (ASPF-1578)
+VERO STATUS 4.3  (ASPF-1578)
 ============================
 
 Shows in your browser whether Vero is available and which model it uses.
@@ -20,5 +20,7 @@ uninstall.bat in its folder so it stops calling Vero.
 TEAM SERVER (one shared page, no login): on an always-on machine run
    python vero_status_server.py
 and share the link it prints. See README.md, section Team server.
+
+LINUX VM (no desktop):  bash scripts/install_vm.sh   (see README.md, On a Linux VM)
 
 Problems: open data\vero-status.log, or read Vero_Status_Guide.pdf.

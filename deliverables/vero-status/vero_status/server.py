@@ -11,6 +11,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import re
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -31,7 +32,7 @@ COOLDOWN_S = 5 * 60  # server mode: viewers may start a check at most this often
 def make_handler(
     monitor: Monitor, port: int, on_quit: Callable[[], None], server_mode: bool = False, admin_key: Optional[str] = None
 ) -> Type[BaseHTTPRequestHandler]:
-    local_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
+    local_names = {"127.0.0.1", "localhost", "[::1]"}  # any port: VS Code or `ssh -L` may forward from another one
 
     class Handler(BaseHTTPRequestHandler):
         server_version = f"{APP_ID}/{__version__}"
@@ -60,8 +61,8 @@ def make_handler(
 
         def _allowed(self, post: bool) -> bool:
             host = (self.headers.get("Host") or "").lower()
-            if not server_mode and host not in local_hosts:
-                return False
+            if not server_mode and re.sub(r":\d+$", "", host) not in local_names:
+                return False  # blocks DNS rebinding: only loopback names, whatever the forwarded port
             origin = self.headers.get("Origin")
             return not post or origin is None or urlparse(origin).netloc.lower() == host
 

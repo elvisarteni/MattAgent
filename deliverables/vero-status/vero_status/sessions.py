@@ -115,6 +115,8 @@ def default_roots() -> List[Tuple[str, str]]:
         Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "Code" / "User" / "globalStorage",
         home / ".config" / "Code" / "User" / "globalStorage",
         home / "Library" / "Application Support" / "Code" / "User" / "globalStorage",
+        home / ".vscode-server" / "data" / "User" / "globalStorage",  # VS Code Remote-SSH on a Linux VM
+        home / ".vscode-server-insiders" / "data" / "User" / "globalStorage",
     ]
     for base in code_storage:
         roots.append((str(base / "*vero*" / "tasks"), "VS Code"))
@@ -183,7 +185,10 @@ def process_command_lines() -> List[str]:
                 check=False,
             )
         else:
-            r = subprocess.run(["ps", "-eo", "args"], capture_output=True, text=True, timeout=10, check=False)
+            # only your own processes: on a shared VM another user's Vero is not "your" open session
+            r = subprocess.run(
+                ["ps", "-U", str(os.getuid()), "-o", "args="], capture_output=True, text=True, timeout=10, check=False
+            )
         return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
     except (OSError, subprocess.SubprocessError):
         return []

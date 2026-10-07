@@ -260,10 +260,10 @@ function render(){
   $("modeBadge").hidden = !server;
   $("modeBadge").textContent = s.admin ? "Team server · admin" : "Team server";
   renderActivity(s.history);
-  $("found").textContent = s.settings.vero_found ? "Found: " + s.settings.vero_found : "Vero CLI not found automatically: enter its full path (in a terminal: where vero).";
+  $("found").textContent = s.settings.vero_found ? "Found: " + s.settings.vero_found : "Vero CLI not found automatically: enter its full path (in a terminal: " + (s.platform === "win32" ? "where vero" : "command -v vero") + ").";
   $("foot").textContent = (server
-    ? `Shared status page for the team, no login. Vero is checked on the server every ${iv || "–"} min. `
-    : "Runs on this computer only (127.0.0.1). ")
+    ? `Shared status page for the team, no login. Vero is checked on ${s.host || "the server"} every ${iv || "–"} min. `
+    : `Runs on ${s.host || "this computer"} only (127.0.0.1). `)
     + "The check asks: \"Reply with exactly: OK\". No answers or secrets are stored.";
   renderSessions(s);
   if (!settingsLoaded) {

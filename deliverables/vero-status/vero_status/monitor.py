@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import socket
+import sys
 import threading
 import time
 from pathlib import Path
@@ -214,6 +216,8 @@ class Monitor:
             "checks_24h": len(day),
             "history": hist[-48:],
             "mode": "server" if self.server_mode else "local",
+            "host": socket.gethostname(),  # where the checks run, e.g. the VM's name
+            "platform": sys.platform,
             "settings": {
                 "vero_path": self.settings.vero_path if admin else "",
                 "vero_found": vero.find_vero(self.settings.vero_path) if admin else None,

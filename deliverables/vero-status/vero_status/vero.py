@@ -46,19 +46,38 @@ def clean(text: str) -> str:
     return _SECRET.sub("[hidden]", " ".join(text.split()))[:DETAIL_MAX]
 
 
+def _version_key(path: Path) -> List[int]:
+    return [int(n) for n in re.findall(r"\d+", path.parent.parent.name)]
+
+
+def npm_locations(home: Path) -> List[Path]:
+    """Where npm puts `vero` when it is not on the PATH. A Linux VM started by systemd or cron has a
+    minimal PATH, so an nvm or ~/.npm-global install is not found by name."""
+    appdata = os.environ.get("APPDATA")
+    places = [Path(appdata) / "npm" / "vero.cmd"] if appdata else []
+    nvm = sorted(home.glob(".nvm/versions/node/*/bin/vero"), key=_version_key, reverse=True)  # newest node first
+    places += [*nvm, home / ".npm-global" / "bin" / "vero", home / ".local" / "bin" / "vero", Path("/usr/local/bin/vero")]
+    return places
+
+
 def find_vero(configured: str = "") -> Optional[str]:
-    """Configured path, else `vero` on PATH (vero.cmd on Windows), else the npm default folder."""
+    """Configured path, else `vero` on PATH (vero.cmd on Windows), else the usual npm folders."""
     for candidate in (configured, "vero"):
         if candidate:
             found = shutil.which(candidate) or (candidate if Path(candidate).is_file() else None)
             if found:
                 return found
-    appdata = os.environ.get("APPDATA")
-    if appdata:
-        npm = Path(appdata) / "npm" / "vero.cmd"
-        if npm.is_file():
-            return str(npm)
-    return None
+    return next((str(p) for p in npm_locations(Path.home()) if p.is_file()), None)
+
+
+def child_env(exe: str) -> Dict[str, str]:
+    """`vero` is a node script (`#!/usr/bin/env node`); with nvm, node sits next to it but may not be on
+    the PATH of a service. Put the program's own folder first so its node is found."""
+    env = dict(os.environ)
+    folder = os.path.dirname(exe)
+    if folder:
+        env["PATH"] = folder + os.pathsep + env.get("PATH", "")
+    return env
 
 
 def _kill_tree(proc: subprocess.Popen[bytes]) -> None:
@@ -83,6 +102,7 @@ def run(args: Sequence[str], timeout_s: float, cwd: Optional[str] = None) -> Pro
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=cwd,
+            env=child_env(args[0]),
             creationflags=NO_WINDOW,
             start_new_session=os.name != "nt",
         )

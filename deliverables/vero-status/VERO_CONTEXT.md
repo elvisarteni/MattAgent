@@ -1,4 +1,4 @@
-# VERO_CONTEXT: Vero Status 4.2.0
+# VERO_CONTEXT: Vero Status 4.3.0
 
 > **For the AI reading this:** this file describes the whole program. Read a file before changing it, and keep the rules at the end.
 
@@ -30,7 +30,7 @@ The Jira story is ASPF-1578, for the Quality AI Automation team at NXP. Version 
 Vero Status.pyw          double-click entry: adds the folder to sys.path, calls vero_status.app.run()
 vero_status_server.py    team server entry: calls vero_status.app.serve_team() (admin key, binds 0.0.0.0)
 vero_status/
-  __init__.py            __version__ = "4.2.0", APP_ID = "vero-status"
+  __init__.py            __version__ = "4.3.0", APP_ID = "vero-status"
   app.py                 single instance (GET /api/health), logging to data/vero-status.log, opens the browser,
                          shows a Windows message box on errors (no console)
   vero.py                find_vero, run (no window, kills the process tree on timeout), and pure parsers:
@@ -49,9 +49,17 @@ vero_status/
 scripts/fake_vero.py     stand-in Vero: version, config, task --json (FAKE_VERO_MODE ok|down|auth|hang|nocompletion|refuse)
 scripts/fake_session.py  writes a realistic session log into a folder (demo and tests; never your real ~/.vero)
 scripts/vero, vero.cmd   launch the fake Vero (point "Vero CLI location" at one of these for a demo)
+scripts/install_vm.sh    Linux VM: systemd user service or crontab; personal | team | status | uninstall
 scripts/build_source_pdf.py   writes the source as a PDF for rebuilding (developer tool, needs reportlab)
 tests/                   unittest; never calls the real Vero
 ```
+
+## Linux VM (4.3)
+
+Headless: `app.can_open_browser()` is false without DISPLAY/WAYLAND_DISPLAY, so the URL is printed. `vero.npm_locations()`
+finds nvm / npm-global installs and `vero.child_env()` puts the program's folder first on PATH (node for nvm).
+Local mode accepts loopback host names on any port (forwarded ports). `data/` is 0700, the admin key 0600.
+`process_command_lines()` lists only the current user's processes on POSIX. SIGTERM stops like Ctrl+C.
 
 ## One check (`monitor.perform_check`)
 
@@ -81,7 +89,7 @@ A broken settings file falls back to the defaults.
 ## Quality gates
 
 ```
-python -m unittest discover -s tests -t .      (49 tests, Python 3.8–3.13)
+python -m unittest discover -s tests -t .      (54 tests, Python 3.8–3.13)
 uvx ruff check . && uvx ruff format --check .
 uvx mypy && uvx mypy --platform win32          (strict)
 ```

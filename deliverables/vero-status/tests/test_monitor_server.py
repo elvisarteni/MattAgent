@@ -198,6 +198,14 @@ class ServerTest(unittest.TestCase):
 
     def test_foreign_host_and_origin_rejected(self):
         self.assertEqual(self.req("/api/state", Host="evil.example")[0], 403)
+        self.assertEqual(self.req("/api/state", Host="evil.example:8767")[0], 403)
+        self.assertEqual(self.req("/api/state", Host="localhost.evil.example")[0], 403)
+
+    def test_forwarded_from_another_port(self):
+        """VS Code port forwarding or `ssh -L 9000:127.0.0.1:8767` from a VM: the browser's port differs."""
+        self.assertEqual(self.req("/api/state", Host="localhost:9000")[0], 200)
+        self.assertEqual(self.req("/api/check", post=True, Host="localhost:9000", Origin="http://localhost:9000")[0], 202)
+        self.assertEqual(self.req("/api/check", post=True, Host="localhost:9000", Origin="http://localhost:8767")[0], 403)
         self.assertEqual(self.req("/api/check", post=True, Origin="http://evil.example")[0], 403)
         self.assertEqual(self.req("/api/quit", post=True, Origin="http://evil.example")[0], 403)
 
@@ -288,3 +296,15 @@ class AdminKeyTest(unittest.TestCase):
             k1 = admin_key(Path(d))
             self.assertGreaterEqual(len(k1), 24)
             self.assertEqual(admin_key(Path(d)), k1)
+            if os.name != "nt":  # a shared Linux VM: other users must not read the admin key
+                self.assertEqual((Path(d) / "admin_key.txt").stat().st_mode & 0o077, 0)
+
+
+class HeadlessTest(unittest.TestCase):
+    def test_no_browser_on_a_headless_linux_vm(self):
+        from vero_status.app import can_open_browser
+
+        self.assertFalse(can_open_browser("linux", {}))
+        self.assertTrue(can_open_browser("linux", {"DISPLAY": ":0"}))
+        self.assertTrue(can_open_browser("linux", {"WAYLAND_DISPLAY": "wayland-0"}))
+        self.assertTrue(can_open_browser("win32", {}))

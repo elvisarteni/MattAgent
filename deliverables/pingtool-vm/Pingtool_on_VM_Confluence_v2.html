@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pingtool on a Linux VM</title>
+<style>
+body{font:15px/1.5 -apple-system,"Segoe UI",Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#172b4d;background:#fff}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px}th,td{border:1px solid #c1c7d0;padding:6px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f4f5f7}
+pre{background:#f4f5f7;padding:8px 10px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere}code{font-family:Consolas,monospace;font-size:13px;overflow-wrap:anywhere}
+.howto{background:#deebff;padding:8px 12px;margin-bottom:20px}
+</style></head><body>
+<div class="howto">To publish: open this file in a browser, select from the title <b>Pingtool (Vero Status) on a Linux VM</b> down to the end, copy, and paste into a new Confluence page in the <b>AES Software Quality</b> space (suggested parent: <i>DevEx/ Process Improvement</i>). Attach <code>Vero_Status_4.3.0.zip</code> to the page.</div>
+
+<h1>Pingtool (Vero Status) on a Linux VM</h1>
+<p><b>Jira:</b> ASPF-1578 · <b>Version:</b> 4.3.0 · <b>Owner:</b> Quality AI Automation</p>
+<p>Pingtool checks whether Vero is available and which model it uses, and shows the result on a web page. On a Linux VM it runs in the background and starts with the machine. You open the page on your laptop through the SSH connection; nothing is opened to the network.</p>
+
+<h2>1. Prerequisites</h2>
+<table>
+<tr><th>Item</th><th>Check on the VM</th></tr>
+<tr><td>SSH access to the VM</td><td><code>ssh &lt;user&gt;@&lt;vm-host&gt;</code> logs in</td></tr>
+<tr><td>Python 3.8 or newer</td><td><code>python3 --version</code></td></tr>
+<tr><td>Vero CLI 2.3.x, signed in</td><td><code>vero version</code> prints a version; <code>vero auth</code> has been done once</td></tr>
+<tr><td>The release zip</td><td><code>Vero_Status_4.3.0.zip</code>, attached to this page</td></tr>
+</table>
+
+<h2>2. Install</h2>
+<p>On your laptop (WSL or Git Bash), in the folder with the zip:</p>
+<pre><code>scp Vero_Status_4.3.0.zip &lt;user&gt;@&lt;vm-host&gt;:~/
+ssh &lt;user&gt;@&lt;vm-host&gt;</code></pre>
+<p>On the VM:</p>
+<pre><code>mkdir -p ~/tools &amp;&amp; cd ~/tools
+python3 -m zipfile -e ~/Vero_Status_4.3.0.zip .
+cd vero-status
+bash scripts/install_vm.sh</code></pre>
+<p>The script checks Python and Vero, starts Pingtool in the background, and sets it to start with the VM (systemd user service, or crontab if systemd is not available). No sudo is needed. It ends with <i>Vero Status is running on this VM, port 8767</i>.</p>
+<p>If it says it only runs while you are logged in, ask the VM admin once for: <code>sudo loginctl enable-linger &lt;user&gt;</code></p>
+
+<h2>3. Open the page</h2>
+<table>
+<tr><th>From</th><th>How</th></tr>
+<tr><td>VS Code (Remote-SSH to the VM)</td><td>PORTS tab › <i>Forward a Port</i> › <code>8767</code>. Open the local address VS Code shows (it can be another port, e.g. 8768, if 8767 is used on your laptop).</td></tr>
+<tr><td>A terminal on your laptop</td><td><code>ssh -N -L 8767:127.0.0.1:8767 &lt;user&gt;@&lt;vm-host&gt;</code>, keep it open, then open <code>http://localhost:8767</code>. If 8767 is used on your laptop, use e.g. <code>-L 9000:127.0.0.1:8767</code> and <code>http://localhost:9000</code>.</td></tr>
+</table>
+<p>The page footer shows the VM name, so you know the checks run on the VM and not on your laptop.</p>
+
+<h2>4. Modes</h2>
+<table>
+<tr><th>Mode</th><th>Install command</th><th>Who sees it</th></tr>
+<tr><td>Personal (default)</td><td><code>bash scripts/install_vm.sh</code></td><td>You, through the forwarded port. Also shows your own Vero sessions on the VM (CLI and VS Code Remote-SSH) and their response time.</td></tr>
+<tr><td>Team</td><td><code>bash scripts/install_vm.sh team</code></td><td>Anyone who can reach <code>http://&lt;vm-host&gt;:8767</code>, without login. Needs the port opened to the VM (request to IT). Settings only with the admin link; the key is in <code>data/admin_key.txt</code>.</td></tr>
+</table>
+
+<h2>5. Operate</h2>
+<p>All commands run in <code>~/tools/vero-status</code> on the VM.</p>
+<table>
+<tr><th>Task</th><th>Command</th></tr>
+<tr><td>Is it running?</td><td><code>bash scripts/install_vm.sh status</code></td></tr>
+<tr><td>Restart</td><td><code>bash scripts/install_vm.sh</code> (or <code>… team</code>) again</td></tr>
+<tr><td>Log</td><td><code>tail -f data/vero-status.log</code></td></tr>
+<tr><td>Stop and remove the autostart</td><td><code>bash scripts/install_vm.sh uninstall</code></td></tr>
+<tr><td>Update to a new version</td><td>Copy the new zip to the VM, then in <code>~/tools</code>: <code>python3 -m zipfile -e ~/Vero_Status_&lt;version&gt;.zip .</code> and <code>bash vero-status/scripts/install_vm.sh</code>. History and settings in <code>data/</code> are kept.</td></tr>
+</table>
+
+<h2>6. Troubleshooting</h2>
+<table>
+<tr><th>Symptom</th><th>Fix</th></tr>
+<tr><td>Vero CLI not found</td><td>On the VM, run <code>command -v vero</code> and enter that path in <i>Settings › Vero CLI location</i>.</td></tr>
+<tr><td>Not available: Unauthorized</td><td>Run <code>vero auth</code> on the VM.</td></tr>
+<tr><td>Not running after a VM reboot</td><td>Lingering is off: ask the VM admin for <code>sudo loginctl enable-linger &lt;user&gt;</code>.</td></tr>
+<tr><td>Page does not open</td><td>Check that the port forward is active and that <code>status</code> says running.</td></tr>
+<tr><td>Vero needs a proxy on the VM</td><td>Set <code>HTTPS_PROXY</code> in your shell, then run the install again. It copies the proxy settings for the background service.</td></tr>
+</table>
+
+<h2>7. Security</h2>
+<ul>
+<li>Each check sends one prompt (<code>Reply with exactly: OK</code>) to the cheap Haiku 4.5 model, every 15 minutes by default (96 a day; change in Settings).</li>
+<li>No prompts, answers or secrets are stored. <code>data/</code> (history, settings, log, admin key, proxy settings) is readable by your user only.</li>
+<li>Personal mode listens on 127.0.0.1 only. Only your own processes and session logs are read, not those of other users on the VM.</li>
+</ul>
+</body></html>

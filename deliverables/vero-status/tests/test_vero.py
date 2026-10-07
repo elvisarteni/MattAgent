@@ -84,14 +84,40 @@ class RunAndFindTest(unittest.TestCase):
 
     def test_find_vero(self):
         self.assertEqual(vero.find_vero(sys.executable), sys.executable)
-        with mock.patch("vero_status.vero.shutil.which", return_value=None), mock.patch.dict(os.environ, {"APPDATA": ""}):
-            self.assertIsNone(vero.find_vero("/nope/vero-xyz"))
         with tempfile.TemporaryDirectory() as d:
+            no_path = mock.patch("vero_status.vero.shutil.which", return_value=None)
+            home = mock.patch("vero_status.vero.Path.home", return_value=Path(d))
+            with no_path, home, mock.patch.dict(os.environ, {"APPDATA": ""}), mock.patch.object(
+                Path, "is_file", return_value=False
+            ):
+                self.assertIsNone(vero.find_vero("/nope/vero-xyz"))
             npm = Path(d) / "npm"
             npm.mkdir()
             (npm / "vero.cmd").write_text("@echo off")
-            with mock.patch("vero_status.vero.shutil.which", return_value=None), mock.patch.dict(os.environ, {"APPDATA": d}):
+            with no_path, home, mock.patch.dict(os.environ, {"APPDATA": d}):
                 self.assertEqual(vero.find_vero(""), str(npm / "vero.cmd"))  # npm default location on Windows
+
+    def test_find_vero_linux_vm_nvm_newest_node(self):
+        """On a VM a service has a minimal PATH: an nvm install must still be found (newest node first)."""
+        with tempfile.TemporaryDirectory() as d:
+            for v in ("v9.11.2", "v20.11.0", "v18.19.1"):
+                b = Path(d) / ".nvm" / "versions" / "node" / v / "bin"
+                b.mkdir(parents=True)
+                (b / "vero").write_text("#!/usr/bin/env node")
+            with mock.patch("vero_status.vero.shutil.which", return_value=None), mock.patch(
+                "vero_status.vero.Path.home", return_value=Path(d)
+            ), mock.patch.dict(os.environ, {"APPDATA": ""}):
+                self.assertIn("v20.11.0", vero.find_vero("") or "")
+
+    @unittest.skipIf(os.name == "nt", "POSIX shell script")
+    def test_run_puts_the_program_folder_first_on_path(self):
+        """So `#!/usr/bin/env node` finds the node that nvm installed next to vero."""
+        with tempfile.TemporaryDirectory() as d:
+            script = Path(d) / "show-path"
+            script.write_text('#!/bin/sh\necho "$PATH"\n')
+            script.chmod(0o755)
+            r = vero.run([str(script)], 10)
+            self.assertTrue(r.out.startswith(d + os.pathsep), r.out)
 
 
 if __name__ == "__main__":

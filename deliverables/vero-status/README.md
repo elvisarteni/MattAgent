@@ -11,7 +11,7 @@ Double-click **Vero Status** and a dashboard opens in your browser showing:
 
 Buttons: **Check now**, **Settings** (how often to check, which model to use for the check, Vero location), **Quit**.
 
-Jira ASPF-1578 · Version 4.2.0 · Python 3.8+ standard library only, no install, no command window.
+Jira ASPF-1578 · Version 4.3.0 · Python 3.8+ standard library only, no install, no command window.
 
 ## Use it
 
@@ -56,6 +56,19 @@ New-NetFirewallRule -DisplayName "Vero Status" -Direction Inbound -LocalPort 876
 Plain HTTP is fine on the intranet (the page holds no secrets); put IIS or nginx in front for HTTPS.
 Record the host, the functional account and the link in the SCMP (`servers.md`, `functional-accounts.md`, `publishing.md`).
 
+## On a Linux VM (no desktop)
+
+```
+bash scripts/install_vm.sh            # personal: 127.0.0.1, your own sessions; starts with the VM
+bash scripts/install_vm.sh team       # team server on all interfaces (port must be open to the VM)
+bash scripts/install_vm.sh status     # or: uninstall
+```
+
+Open it from your laptop through VS Code port forwarding (PORTS tab, port 8767) or
+`ssh -N -L 8767:127.0.0.1:8767 <user>@<vm-host>`. It uses a systemd user service (or crontab @reboot), needs no sudo,
+and copies your PATH and proxy settings for the service. To keep it running after a reboot without a login, the VM admin
+runs `sudo loginctl enable-linger <user>` once. Unzip with `python3 -m zipfile -e <zip> .` if `unzip` is missing.
+
 ## How a check works
 
 1. `vero version`: is Vero installed?
@@ -83,7 +96,7 @@ In Settings, set *Vero CLI location* to `scripts\vero.cmd` (Windows) or `scripts
 ## Develop
 
 ```
-python -m unittest discover -s tests -t .      # 49 tests, fake Vero only
+python -m unittest discover -s tests -t .      # 54 tests, fake Vero only
 uvx ruff check . && uvx ruff format --check .  # lint + format
 uvx mypy && uvx mypy --platform win32          # strict typing
 uv run --no-project --with reportlab python scripts/build_source_pdf.py   # source as PDF for rebuild
